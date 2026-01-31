@@ -13,6 +13,9 @@
         android:theme="@style/Theme.QuanLyDuAnAgile"
         tools:targetApi="31">
         <activity
+            android:name=".chinh"
+            android:exported="false" />
+        <activity
             android:name=".dangxuat"
             android:exported="false" />
         <activity
