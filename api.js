@@ -1,5 +1,15 @@
 // API Configuration
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = (() => {
+    try {
+        const saved = localStorage.getItem('api_base_url');
+        if (saved) return saved;
+        const { protocol, hostname } = window.location || {};
+        if (protocol && protocol.startsWith('http') && hostname) {
+            return `${protocol}//${hostname}:3000/api`;
+        }
+    } catch (_) {}
+    return 'http://localhost:3000/api';
+})();
 
 // Helper function to get auth token
 function getAuthToken() {
@@ -40,6 +50,8 @@ async function apiRequest(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     const config = {
         ...options,
+        mode: 'cors',
+        credentials: 'omit',
         headers: {
             ...getHeaders(),
             ...(options.headers || {})
@@ -79,7 +91,19 @@ async function apiRequest(endpoint, options = {}) {
         
         // Handle network errors
         if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-            throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra:\n1. Backend server đang chạy tại http://localhost:3000\n2. Không có firewall chặn kết nối\n3. CORS đã được cấu hình đúng');
+            // Fallback thử với 127.0.0.1
+            try {
+                const fallbackBase = API_BASE_URL.replace('localhost', '127.0.0.1');
+                const resp = await fetch(`${fallbackBase}${endpoint}`, config);
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({ message: 'Lỗi kết nối server' }));
+                    throw new Error(err.message || `HTTP ${resp.status}: ${resp.statusText}`);
+                }
+                const data = await resp.json();
+                return data;
+            } catch (_) {
+                throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra:\n1. Backend server đang chạy tại http://localhost:3000\n2. Không có firewall chặn kết nối\n3. CORS đã được cấu hình đúng');
+            }
         }
         
         throw error;
@@ -133,6 +157,28 @@ const ProductsAPI = {
 
     async delete(id) {
         return apiRequest(`/products/${id}`, {
+            method: 'DELETE'
+        });
+    },
+
+    async softDelete(id) {
+        return apiRequest(`/products/soft-delete/${id}`, {
+            method: 'DELETE'
+        });
+    },
+
+    async getTrash() {
+        return apiRequest('/products/trash');
+    },
+
+    async restore(id) {
+        return apiRequest(`/products/restore/${id}`, {
+            method: 'PUT'
+        });
+    },
+
+    async forceDelete(id) {
+        return apiRequest(`/products/permanent/${id}`, {
             method: 'DELETE'
         });
     }
@@ -247,7 +293,30 @@ const CategoriesAPI = {
         });
     },
 
+    async softDelete(id) {
+        return apiRequest(`/categories/soft-delete/${id}`, {
+            method: 'DELETE'
+        });
+    },
+
+    async getTrash() {
+        return apiRequest('/categories/trash');
+    },
+
+    async restore(id) {
+        return apiRequest(`/categories/restore/${id}`, {
+            method: 'PUT'
+        });
+    },
+
+    async forceDelete(id) {
+        return apiRequest(`/categories/permanent/${id}`, {
+            method: 'DELETE'
+        });
+    },
+
     async delete(id) {
+        // Keeping this for backward compatibility or if standard delete is needed
         return apiRequest(`/categories/${id}`, {
             method: 'DELETE'
         });

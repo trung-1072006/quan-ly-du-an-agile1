@@ -265,10 +265,8 @@ let currentProductView = 'active'; // 'active' or 'deleted'
 
 async function loadProducts() {
     try {
-        // Mock data
-        allProducts = MOCK_PRODUCTS;
         currentProductPage = 1; // Reset to first page
-        filterAndRenderProducts();
+        await loadProductTableData();
     } catch (error) {
         console.error('Error loading products:', error);
         showNotification('Không thể tải danh sách sản phẩm', 'error');
@@ -280,19 +278,58 @@ function toggleProductView() {
     if (viewSelect) {
         currentProductView = viewSelect.value;
         currentProductPage = 1;
-        filterAndRenderProducts();
+        loadProductTableData();
+    }
+}
+
+async function loadProductTableData() {
+    try {
+        let baseProducts = [];
+        const searchInput = document.getElementById('productSearch');
+        const searchTerm = searchInput ? searchInput.value.trim() : '';
+        const categorySelect = document.getElementById('categoryFilter');
+        const categoryId = categorySelect ? categorySelect.value : '';
+
+        if (currentProductView === 'active') {
+            const filters = {};
+            if (categoryId) filters.category = categoryId;
+            if (searchTerm) filters.search = searchTerm;
+
+            const res = await ProductsAPI.getAll(filters);
+            const data = res && res.data ? res.data : res;
+            if (data && Array.isArray(data.products)) {
+                baseProducts = data.products;
+            } else if (Array.isArray(data)) {
+                baseProducts = data;
+            }
+        } else {
+            const res = await ProductsAPI.getTrash();
+            const data = res && res.data ? res.data : res;
+            baseProducts = Array.isArray(data) ? data : (Array.isArray(data.products) ? data.products : []);
+
+            if (categoryId) {
+                baseProducts = baseProducts.filter(p =>
+                    p.category?._id === categoryId ||
+                    p.category === categoryId ||
+                    p.category_id === categoryId
+                );
+            }
+
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase();
+                baseProducts = baseProducts.filter(p => p.name?.toLowerCase().includes(term));
+            }
+        }
+        allProducts = baseProducts;
+        renderProducts(allProducts);
+    } catch (error) {
+        console.error('Error loading products table:', error);
+        showNotification('Không thể tải danh sách sản phẩm: ' + error.message, 'error');
     }
 }
 
 function filterAndRenderProducts() {
-    let filtered = [];
-    
-    // First filter by active/deleted status
-    if (currentProductView === 'active') {
-        filtered = allProducts.filter(p => !p.isDeleted);
-    } else {
-        filtered = allProducts.filter(p => p.isDeleted);
-    }
+    let filtered = Array.isArray(allProducts) ? [...allProducts] : [];
     
     // Then apply other filters if any (search, category)
     // We need to re-apply existing filters
@@ -303,7 +340,11 @@ function filterAndRenderProducts() {
     
     const categoryId = document.getElementById('categoryFilter')?.value;
     if (categoryId) {
-        filtered = filtered.filter(p => p.category?._id === categoryId || p.category === categoryId);
+        filtered = filtered.filter(p => 
+            p.category?._id === categoryId || 
+            p.category === categoryId ||
+            p.category_id === categoryId
+        );
     }
     
     renderProducts(filtered);
@@ -314,7 +355,7 @@ function renderProducts(products) {
     if (!tbody) return;
 
     if (products.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center">Không có sản phẩm nào</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center">Không có sản phẩm nào</td></tr>';
         renderPagination('products', 0);
         return;
     }
@@ -325,7 +366,23 @@ function renderProducts(products) {
     const paginatedProducts = products.slice(startIndex, endIndex);
 
     tbody.innerHTML = paginatedProducts.map(product => {
-        const categoryName = product.category?.name || 'N/A';
+        let categoryName = product.category?.name || product.category_name || '';
+        if (!categoryName) {
+            const catId = product.category?._id || product.category || product.category_id;
+            if (catId && Array.isArray(allCategories) && allCategories.length > 0) {
+                const matched = allCategories.find(c => c._id === catId || c.id === catId);
+                if (matched && matched.name) {
+                    categoryName = matched.name;
+                }
+            }
+            if (!categoryName && typeof product.category === 'string') {
+                categoryName = product.category;
+            }
+            if (!categoryName && typeof product.category_id === 'string') {
+                categoryName = product.category_id;
+            }
+        }
+        if (!categoryName) categoryName = 'N/A';
         
         let actionButtons = '';
         if (currentProductView === 'active') {
@@ -353,7 +410,6 @@ function renderProducts(products) {
                 <td>${product.name || 'N/A'}</td>
                 <td>${categoryName}</td>
                 <td>${formatCurrency(product.price || 0)}</td>
-                <td>${product.stock || 0}</td>
                 <td>
                     <div class="action-buttons">
                         ${actionButtons}
@@ -367,11 +423,11 @@ function renderProducts(products) {
 }
 
 function searchProducts() {
-    filterAndRenderProducts();
+    loadProductTableData();
 }
 
 function filterProducts() {
-    filterAndRenderProducts();
+    loadProductTableData();
 }
 
 function openAddProductModal() {
@@ -385,9 +441,16 @@ function openAddProductModal() {
 
 async function editProduct(id) {
     try {
-        // Mock data find
-        const product = allProducts.find(p => p._id === id);
-        if (!product) return;
+        // Ưu tiên dữ liệu đã tải, nếu không có thì gọi API chi tiết
+        let product = allProducts.find(p => p._id === id);
+        if (!product) {
+            const res = await ProductsAPI.getById(id);
+            product = res && res.data ? res.data : res;
+            if (!product) {
+                showNotification('Không tìm thấy sản phẩm', 'error');
+                return;
+            }
+        }
         
         document.getElementById('productModalTitle').textContent = 'Sửa sản phẩm';
         document.getElementById('productSubmitText').textContent = 'Cập nhật';
@@ -395,7 +458,6 @@ async function editProduct(id) {
         document.getElementById('productName').value = product.name || '';
         document.getElementById('productDescription').value = product.description || '';
         document.getElementById('productPrice').value = product.price || 0;
-        document.getElementById('productStock').value = product.stock || 0;
         document.getElementById('productCategory').value = product.category?._id || product.category || '';
         document.getElementById('productImage').value = product.image || '';
         document.getElementById('productRating').value = product.rating || 4.5;
@@ -419,32 +481,43 @@ async function editProduct(id) {
 
 async function softDeleteProduct(id) {
     if (!confirm('Bạn có chắc chắn muốn xóa tạm thời sản phẩm này?')) return;
-
-    const index = allProducts.findIndex(p => p._id === id);
-    if (index !== -1) {
-        allProducts[index].isDeleted = true;
+    try {
+        await ProductsAPI.softDelete(id);
         showNotification('Đã chuyển sản phẩm vào thùng rác', 'success');
-        filterAndRenderProducts();
+        const viewSelect = document.getElementById('productViewFilter');
+        if (viewSelect) {
+            viewSelect.value = 'deleted';
+            currentProductView = 'deleted';
+        }
+        await loadProductTableData();
+    } catch (error) {
+        showNotification('Lỗi xóa tạm sản phẩm: ' + error.message, 'error');
     }
 }
 
 async function restoreProduct(id) {
-    const index = allProducts.findIndex(p => p._id === id);
-    if (index !== -1) {
-        allProducts[index].isDeleted = false;
+    try {
+        await ProductsAPI.restore(id);
         showNotification('Đã khôi phục sản phẩm', 'success');
-        filterAndRenderProducts();
+        const viewSelect = document.getElementById('productViewFilter');
+        if (viewSelect) {
+            viewSelect.value = 'active';
+            currentProductView = 'active';
+        }
+        await loadProductTableData();
+    } catch (error) {
+        showNotification('Lỗi khôi phục sản phẩm: ' + error.message, 'error');
     }
 }
 
 async function permanentDeleteProduct(id) {
     if (!confirm('Hành động này không thể hoàn tác. Bạn chắc chắn muốn xóa vĩnh viễn?')) return;
-
-    const index = allProducts.findIndex(p => p._id === id);
-    if (index !== -1) {
-        allProducts.splice(index, 1);
+    try {
+        await ProductsAPI.forceDelete(id);
         showNotification('Đã xóa vĩnh viễn sản phẩm', 'success');
-        filterAndRenderProducts();
+        await loadProductTableData();
+    } catch (error) {
+        showNotification('Lỗi xóa vĩnh viễn sản phẩm: ' + error.message, 'error');
     }
 }
 
@@ -510,13 +583,16 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             
             const productId = document.getElementById('productId').value;
+            const categoryId = document.getElementById('productCategory').value;
+            const imageUrl = uploadedImageUrl || document.getElementById('productImage').value || '';
             const productData = {
                 name: document.getElementById('productName').value,
                 description: document.getElementById('productDescription').value,
                 price: parseFloat(document.getElementById('productPrice').value),
-                stock: parseInt(document.getElementById('productStock').value),
-                category: document.getElementById('productCategory').value,
-                image: uploadedImageUrl || document.getElementById('productImage').value || undefined,
+                category: categoryId,
+                category_id: categoryId,
+                image: imageUrl || undefined,
+                image_url: imageUrl || undefined,
                 rating: parseFloat(document.getElementById('productRating').value),
                 soldCount: parseInt(document.getElementById('productSold').value),
                 discount: parseFloat(document.getElementById('productDiscount').value)
@@ -916,15 +992,16 @@ let currentCategoryView = 'active'; // 'active' or 'deleted'
 
 async function loadCategories() {
     try {
-        // Mock data
-        allCategories = MOCK_CATEGORIES;
+        // Fetch active categories for dropdowns (needed globally or for products)
+        const res = await CategoriesAPI.getAll();
+        const activeCategories = Array.isArray(res) ? res : (res.data || []);
         
+        // Update global variable if used elsewhere
+        allCategories = activeCategories;
+
         // Populate category select in product form
         const categorySelect = document.getElementById('productCategory');
         const categoryFilter = document.getElementById('categoryFilter');
-        
-        // Only show active categories in dropdowns
-        const activeCategories = allCategories.filter(c => !c.isDeleted);
         
         if (categorySelect) {
             categorySelect.innerHTML = '<option value="">Chọn danh mục</option>' +
@@ -942,42 +1019,52 @@ async function loadCategories() {
         
         // Render categories table if on categories page
         if (currentPage === 'categories') {
-            filterAndRenderCategories();
+            await loadCategoryTableData();
         }
     } catch (error) {
         console.error('Error loading categories:', error);
+        showNotification('Không thể tải danh mục: ' + error.message, 'error');
     }
 }
 
-function toggleCategoryView() {
+async function toggleCategoryView() {
     const viewSelect = document.getElementById('categoryViewFilter');
     if (viewSelect) {
         currentCategoryView = viewSelect.value;
-        filterAndRenderCategories();
+        await loadCategoryTableData();
     }
 }
 
-function filterAndRenderCategories() {
-    let filtered = [];
-    if (currentCategoryView === 'active') {
-        filtered = allCategories.filter(c => !c.isDeleted);
-    } else {
-        filtered = allCategories.filter(c => c.isDeleted);
+async function loadCategoryTableData() {
+    try {
+        let categories = [];
+        if (currentCategoryView === 'active') {
+             const res = await CategoriesAPI.getAll();
+             categories = Array.isArray(res) ? res : (res.data || []);
+        } else {
+             const res = await CategoriesAPI.getTrash();
+             categories = Array.isArray(res) ? res : (res.data || []);
+        }
+        renderCategories(categories);
+    } catch(e) {
+        showNotification('Lỗi tải dữ liệu bảng: ' + e.message, 'error');
     }
-    renderCategories(filtered);
 }
+
+// Removed filterAndRenderCategories as it is replaced by loadCategoryTableData
 
 function renderCategories(categories) {
     const tbody = document.getElementById('categoriesTableBody');
     if (!tbody) return;
 
-    if (categories.length === 0) {
+    if (!categories || categories.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" class="text-center">Không có danh mục nào</td></tr>';
         return;
     }
 
     tbody.innerHTML = categories.map(category => {
-        const createdAt = category.createdAt ? new Date(category.createdAt).toLocaleDateString('vi-VN') : 'N/A';
+        const createdAtRaw = category.createdAt || category.created_at;
+        const createdAt = createdAtRaw ? new Date(createdAtRaw).toLocaleDateString('vi-VN') : 'N/A';
         
         let actionButtons = '';
         if (currentCategoryView === 'active') {
@@ -1003,7 +1090,7 @@ function renderCategories(categories) {
         return `
             <tr>
                 <td>${category.name || 'N/A'}</td>
-                <td>${category.description || 'N/A'}</td>
+                <td>${category.description || category.slug || 'N/A'}</td>
                 <td>${createdAt}</td>
                 <td>
                     <div class="action-buttons">
@@ -1016,57 +1103,86 @@ function renderCategories(categories) {
 }
 
 function openAddCategoryModal() {
-    document.getElementById('categoryForm').reset();
+    const form = document.getElementById('categoryForm');
+    if (!form) return;
+    form.reset();
+    form.removeAttribute('data-category-id');
+    const titleEl = document.getElementById('categoryModalTitle');
+    const submitTextEl = document.getElementById('categorySubmitText');
+    if (titleEl) titleEl.textContent = 'Thêm danh mục mới';
+    if (submitTextEl) submitTextEl.textContent = 'Thêm danh mục';
     openModal('categoryModal');
 }
 
 async function editCategory(id) {
-    // For mock data, we just find in array
-    const category = allCategories.find(c => c._id === id);
-    if (!category) return;
-    
-    document.getElementById('categoryName').value = category.name || '';
-    document.getElementById('categoryDescription').value = category.description || '';
-    
-    // Store category ID for update
-    document.getElementById('categoryForm').setAttribute('data-category-id', id);
-    openModal('categoryModal');
+    try {
+        const res = await CategoriesAPI.getById(id);
+        const category = res && res.data ? res.data : res;
+        if (!category || !category._id) {
+            showNotification('Không tìm thấy danh mục', 'error');
+            return;
+        }
+        
+        document.getElementById('categoryName').value = category.name || '';
+        document.getElementById('categoryDescription').value = category.description || '';
+        
+        const form = document.getElementById('categoryForm');
+        if (form) {
+            form.setAttribute('data-category-id', id);
+        }
+        const titleEl = document.getElementById('categoryModalTitle');
+        const submitTextEl = document.getElementById('categorySubmitText');
+        if (titleEl) titleEl.textContent = 'Sửa danh mục';
+        if (submitTextEl) submitTextEl.textContent = 'Cập nhật danh mục';
+        openModal('categoryModal');
+    } catch (error) {
+        showNotification('Lỗi khi tải thông tin danh mục: ' + error.message, 'error');
+    }
 }
 
 async function softDeleteCategory(id) {
-    if (!confirm('Bạn có chắc chắn muốn xóa tạm thời danh mục này?')) return;
+    if (!confirm('Bạn có chắc chắn muốn chuyển danh mục vào thùng rác?')) return;
     
-    const index = allCategories.findIndex(c => c._id === id);
-    if (index !== -1) {
-        allCategories[index].isDeleted = true;
+    try {
+        await CategoriesAPI.softDelete(id);
         showNotification('Đã chuyển danh mục vào thùng rác', 'success');
-        loadCategories();
+        const viewSelect = document.getElementById('categoryViewFilter');
+        if (viewSelect) {
+            viewSelect.value = 'deleted';
+            currentCategoryView = 'deleted';
+        }
+        await loadCategoryTableData();
+    } catch (error) {
+        showNotification('Lỗi xóa danh mục: ' + error.message, 'error');
     }
 }
 
 async function restoreCategory(id) {
-    const index = allCategories.findIndex(c => c._id === id);
-    if (index !== -1) {
-        allCategories[index].isDeleted = false;
+    try {
+        await CategoriesAPI.restore(id);
         showNotification('Đã khôi phục danh mục', 'success');
-        loadCategories();
+        const viewSelect = document.getElementById('categoryViewFilter');
+        if (viewSelect) {
+            viewSelect.value = 'active';
+            currentCategoryView = 'active';
+        }
+        await loadCategoryTableData();
+    } catch (error) {
+        showNotification('Lỗi khôi phục danh mục: ' + error.message, 'error');
     }
 }
 
 async function permanentDeleteCategory(id) {
     if (!confirm('Hành động này không thể hoàn tác. Bạn chắc chắn muốn xóa vĩnh viễn?')) return;
     
-    const index = allCategories.findIndex(c => c._id === id);
-    if (index !== -1) {
-        allCategories.splice(index, 1);
+    try {
+        await CategoriesAPI.forceDelete(id);
         showNotification('Đã xóa vĩnh viễn danh mục', 'success');
-        loadCategories();
+        await loadCategoryTableData();
+    } catch (error) {
+        showNotification('Lỗi xóa vĩnh viễn danh mục: ' + error.message, 'error');
     }
 }
-
-// Remove old deleteCategory function to avoid confusion if needed, 
-// or keep it but redirect to softDelete if that's preferred. 
-// But here I implemented specific functions.
 
 // Category form submit
 document.addEventListener('DOMContentLoaded', function() {
@@ -1078,31 +1194,22 @@ document.addEventListener('DOMContentLoaded', function() {
             const categoryId = this.getAttribute('data-category-id');
             const categoryData = {
                 name: document.getElementById('categoryName').value,
-                description: document.getElementById('categoryDescription').value
+                description: document.getElementById('categoryDescription').value,
+                // Add status if needed, default to 1 (active)
+                status: 1 
             };
 
             try {
                 if (categoryId) {
-                    // Mock update
-                    const index = allCategories.findIndex(c => c._id === categoryId);
-                    if (index !== -1) {
-                        allCategories[index] = { ...allCategories[index], ...categoryData };
-                    }
+                    await CategoriesAPI.update(categoryId, categoryData);
                     showNotification('Cập nhật danh mục thành công', 'success');
                 } else {
-                    // Mock create
-                    const newId = 'cat' + (allCategories.length + 1);
-                    allCategories.push({
-                        _id: newId,
-                        ...categoryData,
-                        isDeleted: false,
-                        createdAt: new Date().toISOString()
-                    });
+                    await CategoriesAPI.create(categoryData);
                     showNotification('Thêm danh mục thành công', 'success');
                 }
                 this.removeAttribute('data-category-id');
                 closeModal('categoryModal');
-                loadCategories();
+                loadCategories(); // Reloads both dropdowns and table
             } catch (error) {
                 showNotification(error.message || 'Có lỗi xảy ra', 'error');
             }
