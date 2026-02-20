@@ -128,8 +128,10 @@ const AuthAPI = {
 const ProductsAPI = {
     async getAll(filters = {}) {
         const queryParams = new URLSearchParams();
-        if (filters.category) queryParams.append('category', filters.category);
-        if (filters.search) queryParams.append('search', filters.search);
+        if (filters.category_id || filters.category) {
+            const categoryId = filters.category_id || filters.category;
+            queryParams.append('category_id', categoryId);
+        }
         if (filters.page) queryParams.append('page', filters.page);
         if (filters.limit) queryParams.append('limit', filters.limit);
 
@@ -139,6 +141,12 @@ const ProductsAPI = {
 
     async getById(id) {
         return apiRequest(`/products/${id}`);
+    },
+
+    async search(keyword) {
+        const query = new URLSearchParams();
+        if (keyword) query.append('keyword', keyword);
+        return apiRequest(`/products/search?${query.toString()}`);
     },
 
     async create(productData) {
@@ -333,4 +341,3 @@ window.getAuthToken = getAuthToken;
 window.setAuthToken = setAuthToken;
 window.removeAuthToken = removeAuthToken;
 window.isAuthenticated = isAuthenticated;
-

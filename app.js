@@ -293,7 +293,6 @@ async function loadProductTableData() {
         if (currentProductView === 'active') {
             const filters = {};
             if (categoryId) filters.category = categoryId;
-            if (searchTerm) filters.search = searchTerm;
 
             const res = await ProductsAPI.getAll(filters);
             const data = res && res.data ? res.data : res;
@@ -422,12 +421,53 @@ function renderProducts(products) {
     renderPagination('products', totalPages, currentProductPage);
 }
 
-function searchProducts() {
-    loadProductTableData();
+async function searchProducts() {
+    const searchInput = document.getElementById('productSearch');
+    const searchTerm = searchInput ? searchInput.value.trim() : '';
+    currentProductPage = 1;
+
+    const categorySelect = document.getElementById('categoryFilter');
+    const categoryId = categorySelect ? categorySelect.value : '';
+
+    if (!searchTerm) {
+        await loadProductTableData();
+        return;
+    }
+
+    if (currentProductView === 'active') {
+        try {
+            const res = await ProductsAPI.search(searchTerm);
+            const data = res && res.data ? res.data : res;
+            let products = Array.isArray(data.products) ? data.products : (Array.isArray(data) ? data : []);
+
+            if (categoryId) {
+                products = products.filter(p =>
+                    p.category?._id === categoryId ||
+                    p.category === categoryId ||
+                    p.category_id === categoryId
+                );
+            }
+
+            allProducts = products;
+            renderProducts(allProducts);
+        } catch (error) {
+            showNotification('Không thể tìm kiếm sản phẩm: ' + error.message, 'error');
+        }
+    } else {
+        await loadProductTableData();
+    }
 }
 
-function filterProducts() {
-    loadProductTableData();
+async function filterProducts() {
+    currentProductPage = 1;
+    const searchInput = document.getElementById('productSearch');
+    const searchTerm = searchInput ? searchInput.value.trim() : '';
+
+    if (currentProductView === 'active' && searchTerm) {
+        await searchProducts();
+    } else {
+        await loadProductTableData();
+    }
 }
 
 function openAddProductModal() {
