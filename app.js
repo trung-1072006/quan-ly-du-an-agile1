@@ -1,43 +1,94 @@
 // Main Application Logic
-let currentPage = 'dashboard';
+let currentPage = 'products';
 let allProducts = [];
 let allOrders = [];
 let allUsers = [];
 let allCategories = [];
 
-// === MOCK DATA START ===
-const MOCK_CATEGORIES = [
-    { _id: 'cat1', name: 'Thời trang nam', description: 'Quần áo nam', isDeleted: false },
-    { _id: 'cat2', name: 'Thời trang nữ', description: 'Quần áo nữ', isDeleted: false },
-    { _id: 'cat3', name: 'Giày dép', description: 'Các loại giày dép', isDeleted: false },
-    { _id: 'cat4', name: 'Điện tử', description: 'Thiết bị điện tử', isDeleted: false },
-    { _id: 'cat5', name: 'Phụ kiện', description: 'Phụ kiện các loại', isDeleted: false }
-];
-
-const MOCK_PRODUCTS = [
-    { _id: 'p1', name: 'Áo thun nam Basic', price: 150000, stock: 100, category: MOCK_CATEGORIES[0], image: 'https://via.placeholder.com/50', isDeleted: false },
-    { _id: 'p2', name: 'Quần Jeans nữ', price: 350000, stock: 50, category: MOCK_CATEGORIES[1], image: 'https://via.placeholder.com/50', isDeleted: false },
-    { _id: 'p3', name: 'Giày Sneaker', price: 800000, stock: 30, category: MOCK_CATEGORIES[2], image: 'https://via.placeholder.com/50', isDeleted: false },
-    { _id: 'p4', name: 'Điện thoại Smart', price: 5000000, stock: 10, category: MOCK_CATEGORIES[3], image: 'https://via.placeholder.com/50', isDeleted: false },
-    { _id: 'p5', name: 'Áo khoác dù', price: 250000, stock: 45, category: MOCK_CATEGORIES[0], image: 'https://via.placeholder.com/50', isDeleted: false },
-    { _id: 'p6', name: 'Đồng hồ thông minh', price: 1200000, stock: 15, category: MOCK_CATEGORIES[3], image: 'https://via.placeholder.com/50', isDeleted: false },
-    { _id: 'p7', name: 'Balo laptop', price: 450000, stock: 20, category: MOCK_CATEGORIES[4], image: 'https://via.placeholder.com/50', isDeleted: false }
-];
-
 const MOCK_ORDERS = [
-    { _id: 'ord1', user: { name: 'Nguyễn Văn A' }, totalAmount: 500000, status: 'pending', createdAt: new Date().toISOString() },
-    { _id: 'ord2', user: { name: 'Trần Thị B' }, totalAmount: 1200000, status: 'confirmed', createdAt: new Date().toISOString() },
-    { _id: 'ord3', user: { name: 'Lê Văn C' }, totalAmount: 350000, status: 'shipping', createdAt: new Date().toISOString() },
-    { _id: 'ord4', user: { name: 'Phạm Văn D' }, totalAmount: 250000, status: 'delivered', createdAt: new Date().toISOString() }
+    {
+        _id: 'ORD001',
+        userId: 'customer1',
+        user: {
+            name: 'Nguyễn Văn A',
+            email: 'a@example.com'
+        },
+        items: [
+            {
+                product: {
+                    name: 'Áo thun nam basic',
+                    image: 'https://via.placeholder.com/60'
+                },
+                price: 150000,
+                quantity: 2
+            },
+            {
+                product: {
+                    name: 'Quần jean xanh',
+                    image: 'https://via.placeholder.com/60'
+                },
+                price: 350000,
+                quantity: 1
+            }
+        ],
+        totalAmount: 650000,
+        status: 'pending',
+        createdAt: '2024-01-10T09:15:00Z',
+        shippingAddress: 'Số 1 Tràng Tiền, Hoàn Kiếm, Hà Nội'
+    },
+    {
+        _id: 'ORD002',
+        userId: 'customer2',
+        user: {
+            name: 'Trần Thị B',
+            email: 'b@example.com'
+        },
+        items: [
+            {
+                product: {
+                    name: 'Đầm nữ caro',
+                    image: 'https://via.placeholder.com/60'
+                },
+                price: 420000,
+                quantity: 1
+            }
+        ],
+        totalAmount: 420000,
+        status: 'shipping',
+        createdAt: '2024-01-12T14:30:00Z',
+        shippingAddress: '12 Lê Lợi, Quận 1, TP. Hồ Chí Minh'
+    },
+    {
+        _id: 'ORD003',
+        userId: 'customer3',
+        user: {
+            name: 'Lê Văn C',
+            email: 'c@example.com'
+        },
+        items: [
+            {
+                product: {
+                    name: 'Giày sneaker trắng',
+                    image: 'https://via.placeholder.com/60'
+                },
+                price: 750000,
+                quantity: 1
+            },
+            {
+                product: {
+                    name: 'Vớ cổ cao',
+                    image: 'https://via.placeholder.com/60'
+                },
+                price: 50000,
+                quantity: 2
+            }
+        ],
+        totalAmount: 850000,
+        status: 'delivered',
+        createdAt: '2024-01-15T08:00:00Z',
+        shippingAddress: '99 Điện Biên Phủ, Đà Nẵng'
+    }
 ];
-
-const MOCK_USERS = [
-    { _id: 'u1', name: 'Admin User', email: 'admin@shop.com', role: 'admin', isLocked: false, isDeleted: false, createdAt: '2023-01-01T00:00:00.000Z' },
-    { _id: 'u2', name: 'Nguyễn Văn A', email: 'nguyenvana@gmail.com', role: 'user', isLocked: false, isDeleted: false, createdAt: '2023-05-15T10:30:00.000Z' },
-    { _id: 'u3', name: 'Trần Thị B', email: 'tranthib@yahoo.com', role: 'user', isLocked: true, isDeleted: false, createdAt: '2023-06-20T14:20:00.000Z' },
-    { _id: 'u4', name: 'Lê Văn C', email: 'levanc@outlook.com', role: 'user', isLocked: false, isDeleted: true, createdAt: '2023-07-10T09:15:00.000Z' }
-];
-// === MOCK DATA END ===
 
 // Pagination
 let currentProductPage = 1;
@@ -60,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupNavigation();
 
     // Load initial data
-    loadDashboard();
+    navigateToPage('products');
     loadCategories();
 
     // Setup modals
@@ -116,21 +167,17 @@ function navigateToPage(page) {
         const pageTitle = document.getElementById('pageTitle');
         if (pageTitle) {
             const titles = {
-                dashboard: 'Dashboard',
                 products: 'Sản phẩm',
                 orders: 'Đơn hàng',
                 users: 'Người dùng',
                 categories: 'Danh mục',
-                statistics: 'Thống kê'
+                posts: 'Bài viết'
             };
-            pageTitle.textContent = titles[page] || 'Dashboard';
+            pageTitle.textContent = titles[page] || 'Sản phẩm';
         }
 
         // Load page data
         switch(page) {
-            case 'dashboard':
-                loadDashboard();
-                break;
             case 'products':
                 loadProducts();
                 break;
@@ -143,8 +190,8 @@ function navigateToPage(page) {
             case 'categories':
                 loadCategories();
                 break;
-            case 'statistics':
-                loadStatistics();
+            case 'posts':
+                loadPosts();
                 break;
         }
     }
@@ -500,9 +547,6 @@ async function editProduct(id) {
         document.getElementById('productPrice').value = product.price || 0;
         document.getElementById('productCategory').value = product.category?._id || product.category || '';
         document.getElementById('productImage').value = product.image || '';
-        document.getElementById('productRating').value = product.rating || 4.5;
-        document.getElementById('productSold').value = product.soldCount || 0;
-        document.getElementById('productDiscount').value = product.discount || 0;
         
         // Show image preview if exists
         if (product.image) {
@@ -632,10 +676,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 category: categoryId,
                 category_id: categoryId,
                 image: imageUrl || undefined,
-                image_url: imageUrl || undefined,
-                rating: parseFloat(document.getElementById('productRating').value),
-                soldCount: parseInt(document.getElementById('productSold').value),
-                discount: parseFloat(document.getElementById('productDiscount').value)
+                image_url: imageUrl || undefined
             };
 
             try {
@@ -651,6 +692,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 loadProducts();
             } catch (error) {
                 showNotification(error.message || 'Có lỗi xảy ra', 'error');
+            }
+        });
+    }
+
+    const postForm = document.getElementById('postForm');
+    if (postForm) {
+        postForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const idEl = document.getElementById('postId');
+            const titleInput = document.getElementById('postTitle');
+            const contentInput = document.getElementById('postContent');
+            const statusEl = document.getElementById('postStatus');
+            const imageUrlEl = document.getElementById('postImageUrl');
+            const imageLinkEl = document.getElementById('postImageLink');
+            const imageUrlValue = imageLinkEl && imageLinkEl.value.trim()
+                ? imageLinkEl.value.trim()
+                : (imageUrlEl ? imageUrlEl.value : '');
+            const payload = {
+                title: titleInput ? titleInput.value.trim() : '',
+                content: contentInput ? contentInput.value.trim() : '',
+                status: statusEl ? Number(statusEl.value) : 1,
+                image_url: imageUrlValue
+            };
+            try {
+                if (idEl && idEl.value) {
+                    await PostsAPI.update(idEl.value, payload);
+                    showNotification('Cập nhật bài viết thành công', 'success');
+                } else {
+                    await PostsAPI.create(payload);
+                    showNotification('Thêm bài viết thành công', 'success');
+                }
+                closeModal('postModal');
+                loadPosts();
+            } catch (error) {
+                showNotification(error.message || 'Không thể lưu bài viết', 'error');
             }
         });
     }
@@ -831,9 +907,6 @@ async function updateOrderStatus(orderId) {
         showNotification('Cập nhật trạng thái đơn hàng thành công', 'success');
         closeModal('orderDetailModal');
         loadOrders();
-        if (currentPage === 'dashboard') {
-            loadDashboard();
-        }
     } catch (error) {
         showNotification('Không thể cập nhật trạng thái', 'error');
     }
@@ -856,15 +929,45 @@ let currentUserView = 'active'; // 'active' or 'deleted'
 
 async function loadUsers() {
     try {
-        // Mock data
-        if (allUsers.length === 0) {
-             allUsers = MOCK_USERS;
+        const res = await UsersAPI.getAll();
+        let rawUsers = [];
+
+        if (Array.isArray(res)) {
+            rawUsers = res;
+        } else if (Array.isArray(res.users)) {
+            rawUsers = res.users;
+        } else if (Array.isArray(res.data)) {
+            rawUsers = res.data;
+        } else if (res.data && Array.isArray(res.data.users)) {
+            rawUsers = res.data.users;
         }
+
+        allUsers = rawUsers.map(u => {
+            const numericStatus = typeof u.status === 'number'
+                ? u.status
+                : (u.status === 'blocked' ? 0 : 1);
+            const isLocked = u.isLocked
+                || u.locked
+                || u.status === 'blocked'
+                || numericStatus === 0
+                || false;
+            return {
+                _id: u._id || u.id || u.user_id || '',
+                name: u.name || u.full_name || u.username || u.email || 'N/A',
+                email: u.email || '',
+                role: u.role || 'user',
+                status: numericStatus,
+                isLocked,
+                isDeleted: u.isDeleted || u.deleted || false,
+                createdAt: u.createdAt || u.created_at || null
+            };
+        });
+
         currentUserPage = 1; // Reset to first page
         filterAndRenderUsers();
     } catch (error) {
         console.error('Error loading users:', error);
-        showNotification('Không thể tải danh sách người dùng', 'error');
+        showNotification('Không thể tải danh sách người dùng: ' + (error.message || ''), 'error');
     }
 }
 
@@ -900,6 +1003,20 @@ function renderUsers(users) {
     const totalPages = Math.ceil(users.length / itemsPerPage);
     const startIndex = (currentUserPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
+    let currentAdmin = null;
+    let currentAdminId = null;
+    let currentAdminEmail = null;
+    let currentIsSuperAdmin = false;
+    try {
+        const adminStr = localStorage.getItem('admin_user');
+        if (adminStr) {
+            currentAdmin = JSON.parse(adminStr);
+            currentAdminId = currentAdmin._id || currentAdmin.id || null;
+            currentAdminEmail = currentAdmin.email || null;
+            currentIsSuperAdmin = !!(currentAdmin.is_super_admin || currentAdmin.isSuperAdmin);
+        }
+    } catch (_) {}
+
     const paginatedUsers = users.slice(startIndex, endIndex);
 
     tbody.innerHTML = paginatedUsers.map(user => {
@@ -914,15 +1031,21 @@ function renderUsers(users) {
             statusBadge = '<span class="status-badge status-delivered">Hoạt động</span>';
         }
 
+        const isAdminUser = String(role).toLowerCase() === 'admin';
+        const isSelf =
+            (currentAdminId && (user._id === currentAdminId || user.id === currentAdminId)) ||
+            (currentAdminEmail && user.email === currentAdminEmail);
+
         let actionButtons = '';
         if (currentUserView === 'active') {
             const lockIcon = user.isLocked ? 'fa-unlock' : 'fa-lock';
             const lockText = user.isLocked ? 'Mở khóa' : 'Khóa';
-            
-            actionButtons = `
+            const editBtn = `
                 <button class="action-btn action-btn-edit" onclick="editUser('${user._id}')">
                     <i class="fas fa-edit"></i> Sửa
                 </button>
+            `;
+            const manageBtns = `
                 <button class="action-btn action-btn-warning" onclick="toggleLockUser('${user._id}')" title="${lockText}">
                     <i class="fas ${lockIcon}"></i>
                 </button>
@@ -930,6 +1053,17 @@ function renderUsers(users) {
                     <i class="fas fa-trash"></i> Xóa tạm
                 </button>
             `;
+
+            if (isSelf) {
+                // Không được tự khóa/xóa chính mình
+                actionButtons = editBtn;
+            } else if (isAdminUser && !currentIsSuperAdmin) {
+                // Admin thường: không được khóa/xóa admin khác
+                actionButtons = editBtn;
+            } else {
+                // Super admin khóa/xóa admin khác, hoặc admin với user thường
+                actionButtons = editBtn + manageBtns;
+            }
         } else {
             actionButtons = `
                 <button class="action-btn action-btn-edit" onclick="restoreUser('${user._id}')">
@@ -1019,11 +1153,19 @@ async function permanentDeleteUser(id) {
 async function toggleLockUser(id) {
     const index = allUsers.findIndex(u => u._id === id);
     if (index !== -1) {
-        const newStatus = !allUsers[index].isLocked;
-        allUsers[index].isLocked = newStatus;
-        const msg = newStatus ? 'Đã khóa tài khoản người dùng' : 'Đã mở khóa tài khoản người dùng';
-        showNotification(msg, 'success');
-        filterAndRenderUsers();
+        const user = allUsers[index];
+        const currentlyLocked = !!user.isLocked || user.status === 0;
+        const nextStatus = currentlyLocked ? 1 : 0;
+        try {
+            await UsersAPI.updateStatus(id, nextStatus);
+            user.status = nextStatus;
+            user.isLocked = nextStatus === 0;
+            const msg = nextStatus === 0 ? 'Đã khóa tài khoản người dùng' : 'Đã mở khóa tài khoản người dùng';
+            showNotification(msg, 'success');
+            filterAndRenderUsers();
+        } catch (error) {
+            showNotification(error.message || 'Không thể cập nhật trạng thái tài khoản', 'error');
+        }
     }
 }
 
@@ -1288,15 +1430,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            const userData = { name: nameVal, email: emailVal, role: roleVal };
+            const baseData = {
+                full_name: nameVal,
+                email: emailVal,
+                role: roleVal
+            };
 
             try {
                 if (userId) {
-                    // Mock update
-                    const index = allUsers.findIndex(u => u._id === userId);
-                    if (index !== -1) {
-                         allUsers[index] = { ...allUsers[index], ...userData };
+                    const updateData = { ...baseData };
+                    if (passwordVal) {
+                        if (passwordVal.length < 6) {
+                            showNotification('Mật khẩu tối thiểu 6 ký tự', 'warning');
+                            this.dataset.submitting = 'false';
+                            return;
+                        }
+                        updateData.password = passwordVal;
                     }
+                    await UsersAPI.update(userId, updateData);
                     showNotification('Cập nhật người dùng thành công', 'success');
                 } else {
                     if (passwordVal.length < 6) {
@@ -1304,25 +1455,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.dataset.submitting = 'false';
                         return;
                     }
-                    // Mock create
-                    const newId = 'u' + (allUsers.length + 1) + Date.now();
-                    const createData = { 
-                        _id: newId,
-                        name: nameVal, 
-                        email: emailVal, 
+                    const createData = {
+                        username: emailVal.split('@')[0] || nameVal || emailVal,
+                        password: passwordVal,
+                        full_name: nameVal,
+                        email: emailVal,
                         role: roleVal,
-                        isLocked: false,
-                        isDeleted: false,
-                        createdAt: new Date().toISOString()
+                        status: 1
                     };
-                    allUsers.push(createData);
+                    await UsersAPI.create(createData);
                     showNotification('Thêm người dùng thành công', 'success');
                 }
                 closeModal('userModal');
                 loadUsers();
-                if (currentPage === 'dashboard') {
-                    loadDashboard();
-                }
             } catch (error) {
                 showNotification(error.message || 'Có lỗi xảy ra', 'error');
             } finally {
@@ -1332,391 +1477,176 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ===== Statistics =====
-async function loadStatistics() {
+let allPosts = [];
+let currentPostPage = 1;
+
+async function loadPosts() {
     try {
-        // Mock data
-        const orders = MOCK_ORDERS;
-        const products = MOCK_PRODUCTS;
-
-        // Calculate monthly revenue
-        const monthlyRevenue = {};
-        orders.forEach(order => {
-            if (isOrderCompleted(order.status)) {
-                const date = new Date(order.createdAt);
-                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] || 0) + (order.totalAmount || order.total || 0);
-            }
-        });
-
-        const statsPage = document.getElementById('statistics');
-        const chartContainer = document.getElementById('revenueChart');
-        const compareEl = document.getElementById('revenueCompare');
-        const viewSelect = document.getElementById('chartViewSelect');
-        const yearSelect = document.getElementById('chartYearSelect');
-        const monthSelect = document.getElementById('chartMonthSelect');
-        const monthStartInput = document.getElementById('monthStartInput');
-        const monthEndInput = document.getElementById('monthEndInput');
-        const dayStartInput = document.getElementById('dayStartInput');
-        const dayEndInput = document.getElementById('dayEndInput');
-        const applyRangeBtn = document.getElementById('applyRangeBtn');
-
-        const deliveredOrders = orders.filter(o => isOrderCompleted(o.status));
-
-        const years = Array.from(new Set(orders.map(o => {
-            const d = new Date(o.createdAt);
-            return isNaN(d.getTime()) ? null : d.getFullYear();
-        }).filter(y => y !== null))).sort((a,b)=>b-a);
-        if (yearSelect) {
-            const options = years.length > 0 ? years.map(y => `<option value="${y}">${y}</option>`).join('') : `<option value="${new Date().getFullYear()}">${new Date().getFullYear()}</option>`;
-            yearSelect.innerHTML = options;
-        }
-        if (monthSelect) {
-            monthSelect.innerHTML = Array.from({length:12}, (_,i)=>{
-                const m = i+1; const label = `Tháng ${String(m).padStart(2,'0')}`;
-                return `<option value="${m}">${label}</option>`;
-            }).join('');
-        }
-
-        const now = new Date();
-        const defaultYear = years[0] || now.getFullYear();
-        const defaultMonth = now.getMonth()+1;
-        if (yearSelect) yearSelect.value = String(defaultYear);
-        if (monthSelect) monthSelect.value = String(defaultMonth);
-        if (viewSelect) viewSelect.value = 'month';
-
-        function renderRevenueChart(view, year, month) {
-            if (!chartContainer) return;
-            let labels = [];
-            let values = [];
-            let maxRevenue = 1;
-            let compareText = '';
-
-            if (view === 'month') {
-                const monthTotals = Array.from({length:12}, (_,i)=>0);
-                deliveredOrders.forEach(o => {
-                    const d = new Date(o.createdAt);
-                    if (d.getFullYear() === Number(year)) {
-                        const idx = d.getMonth();
-                        monthTotals[idx] += (o.totalAmount || o.total || 0);
-                    }
-                });
-                labels = Array.from({length:12}, (_,i)=>new Date(Number(year), i, 1).toLocaleDateString('vi-VN', { month: 'short' }));
-                values = monthTotals;
-                maxRevenue = Math.max(...values, 1);
-                const lastIdx = values.slice().map((v,i)=>({v,i})).reverse().find(x=>x.v>0)?.i ?? null;
-                if (lastIdx !== null) {
-                    const curr = values[lastIdx];
-                    const prev = values[lastIdx-1] ?? 0;
-                    const diff = curr - prev;
-                    const pct = prev === 0 ? 100 : Math.round((diff/prev)*100);
-                    const sign = diff >= 0 ? '+' : '';
-                    compareText = `Tháng gần nhất: ${formatCurrency(curr)} (${sign}${pct}% so với tháng trước)`;
-                }
-            } else if (view === 'day') {
-                const daysInMonth = new Date(Number(year), Number(month), 0).getDate();
-                const dayTotals = Array.from({length:daysInMonth}, ()=>0);
-                deliveredOrders.forEach(o => {
-                    const d = new Date(o.createdAt);
-                    if (d.getFullYear() === Number(year) && (d.getMonth()+1) === Number(month)) {
-                        dayTotals[d.getDate()-1] += (o.totalAmount || o.total || 0);
-                    }
-                });
-                labels = Array.from({length:daysInMonth}, (_,i)=>String(i+1));
-                values = dayTotals;
-                maxRevenue = Math.max(...values, 1);
-                const currTotal = values.reduce((s,v)=>s+v,0);
-                const prevMonth = Number(month) - 1 || 12;
-                const prevYear = prevMonth === 12 ? Number(year)-1 : Number(year);
-                const prevDays = new Date(prevYear, prevMonth, 0).getDate();
-                const prevTotals = Array.from({length:prevDays}, ()=>0);
-                deliveredOrders.forEach(o => {
-                    const d = new Date(o.createdAt);
-                    if (d.getFullYear() === prevYear && (d.getMonth()+1) === prevMonth) {
-                        prevTotals[d.getDate()-1] += (o.totalAmount || o.total || 0);
-                    }
-                });
-                const prevTotal = prevTotals.reduce((s,v)=>s+v,0);
-                const diff = currTotal - prevTotal;
-                const pct = prevTotal === 0 ? 100 : Math.round((diff/prevTotal)*100);
-                const sign = diff >= 0 ? '+' : '';
-                compareText = `Tháng ${String(month).padStart(2,'0')}/${year}: ${formatCurrency(currTotal)} (${sign}${pct}% so với tháng trước)`;
-            } else if (view === 'day_range') {
-                const start = new Date(dayStartInput?.value || new Date());
-                const end = new Date(dayEndInput?.value || new Date());
-                if (start > end) { const t = start; start = end; end = t; }
-                const days = Math.ceil((end - start) / (24*3600*1000)) + 1;
-                const totals = Array.from({length:days}, ()=>0);
-                deliveredOrders.forEach(o => {
-                    const d = new Date(o.createdAt);
-                    if (d >= start && d <= end) {
-                        const idx = Math.floor((d - start)/(24*3600*1000));
-                        totals[idx] += (o.totalAmount || o.total || 0);
-                    }
-                });
-                labels = Array.from({length:days}, (_,i)=>{
-                    const d = new Date(start.getTime() + i*24*3600*1000);
-                    return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-                });
-                values = totals;
-                maxRevenue = Math.max(...values, 1);
-                compareText = `${labels[0]} – ${labels[labels.length-1]}: ${formatCurrency(values.reduce((s,v)=>s+v,0))}`;
-            } else if (view === 'month_range') {
-                const ms = monthStartInput?.value;
-                const me = monthEndInput?.value;
-                let sY = Number(ms?.split('-')[0]);
-                let sM = Number(ms?.split('-')[1]);
-                let eY = Number(me?.split('-')[0]);
-                let eM = Number(me?.split('-')[1]);
-                if (!sY || !sM || !eY || !eM) {
-                    const nowM = new Date();
-                    sY = nowM.getFullYear(); sM = 1; eY = nowM.getFullYear(); eM = nowM.getMonth()+1;
-                }
-                const start = new Date(sY, sM-1, 1);
-                const end = new Date(eY, eM, 0, 23, 59, 59, 999);
-                const months = [];
-                let curY = sY, curM = sM;
-                while (curY < eY || (curY === eY && curM <= eM)) {
-                    months.push({ y: curY, m: curM });
-                    curM++; if (curM === 13) { curM = 1; curY++; }
-                }
-                const monthTotals = months.map(() => 0);
-                deliveredOrders.forEach(o => {
-                    const d = new Date(o.createdAt);
-                    if (d >= start && d <= end) {
-                        const idx = months.findIndex(mm => mm.y === d.getFullYear() && mm.m === (d.getMonth()+1));
-                        if (idx >= 0) monthTotals[idx] += (o.totalAmount || o.total || 0);
-                    }
-                });
-                labels = months.map(mm => new Date(mm.y, mm.m-1, 1).toLocaleDateString('vi-VN', { month: 'short', year: 'numeric' }));
-                values = monthTotals;
-                maxRevenue = Math.max(...values, 1);
-                compareText = `${labels[0]} – ${labels[labels.length-1]}: ${formatCurrency(values.reduce((s,v)=>s+v,0))}`;
-            }
-
-            chartContainer.innerHTML = `
-                <div class="chart-container">
-                    ${labels.map((label, index) => {
-                        const height = (values[index] / maxRevenue) * 100;
-                        return `
-                            <div class="chart-bar-wrapper">
-                                <div class="chart-bar" style="height: ${height}%">
-                                    <span class="chart-value">${formatCurrency(values[index])}</span>
-                                </div>
-                                <span class="chart-label">${label}</span>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-                ${values.every(v=>v===0) ? '<p class="text-muted">Chưa có dữ liệu doanh thu</p>' : ''}
-            `;
-            if (compareEl) compareEl.textContent = compareText;
-        }
-
-        if (viewSelect && yearSelect && monthSelect) {
-            function syncVisibility() {
-                const v = viewSelect.value;
-                yearSelect.style.display = v === 'month' || v === 'day' ? 'inline-block' : 'none';
-                monthSelect.style.display = v === 'day' ? 'inline-block' : 'none';
-                monthStartInput.style.display = v === 'month_range' ? 'inline-block' : 'none';
-                monthEndInput.style.display = v === 'month_range' ? 'inline-block' : 'none';
-                dayStartInput.style.display = v === 'day_range' ? 'inline-block' : 'none';
-                dayEndInput.style.display = v === 'day_range' ? 'inline-block' : 'none';
-                applyRangeBtn.style.display = v === 'day_range' || v === 'month_range' ? 'inline-block' : 'none';
-            }
-            syncVisibility();
-            viewSelect.onchange = () => { syncVisibility(); renderRevenueChart(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value)); renderTopCustomers(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value)); renderTopProducts(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value)); };
-            yearSelect.onchange = () => { renderRevenueChart(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value)); renderTopCustomers(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value)); renderTopProducts(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value)); };
-            monthSelect.onchange = () => { renderRevenueChart(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value)); renderTopCustomers(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value)); renderTopProducts(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value)); };
-            applyRangeBtn.onclick = () => { renderRevenueChart(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value)); renderTopCustomers(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value)); renderTopProducts(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value)); };
-        }
-        renderRevenueChart(viewSelect ? viewSelect.value : 'month', Number(yearSelect?.value || defaultYear), Number(monthSelect?.value || defaultMonth));
-
-        async function renderTopProducts(view, year, month) {
-            const topProductsContainer = document.getElementById('topProductsContainer');
-            if (!topProductsContainer) return;
-            let start, end;
-            if (typeof computeRange === 'function') {
-                const r = computeRange(view, year, month); start = r.start; end = r.end;
-            }
-            try {
-                const res = await OrdersAPI.getTopProducts({ limit: 5, status: 'completed', start, end });
-                let items = [];
-                const d = res.data;
-                if (Array.isArray(d)) items = d;
-                else if (Array.isArray(d?.items)) items = d.items;
-                else if (Array.isArray(d?.data)) items = d.data;
-                else if (Array.isArray(res.items)) items = res.items;
-                else if (d && typeof d === 'object') {
-                    const firstArray = Object.values(d).find(v => Array.isArray(v));
-                    items = firstArray || [];
-                }
-
-                const rows = items.map(it => {
-                    const p = it.product || {};
-                    const name = p.name || it.name || 'N/A';
-                    const sold = it.sold || it.soldCount || 0;
-                    const revenue = it.revenue || ((p.price || 0) * sold);
-                    return `
-                        <tr>
-                            <td>${name}</td>
-                            <td>${sold}</td>
-                            <td>${formatCurrency(revenue)}</td>
-                        </tr>
-                    `;
-                }).join('');
-
-                const html = `
-                    <div class="card">
-                        <div class="card-header">
-                            <h3>Sản phẩm bán chạy nhất</h3>
-                        </div>
-                        <div class="card-body">
-                            ${items.length > 0 ? `
-                                <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Tên sản phẩm</th>
-                                            <th>Đã bán</th>
-                                            <th>Doanh thu</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>${rows}</tbody>
-                                </table>
-                            ` : '<p class="text-muted">Chưa có dữ liệu</p>'}
-                        </div>
-                    </div>
-                `;
-                topProductsContainer.innerHTML = html;
-            } catch (e) {
-                topProductsContainer.innerHTML = '<p class="text-muted">Không thể tải Top sản phẩm</p>';
-            }
-        }
-
-        function computeRange(view, year, month) {
-            if (view === 'month') {
-                const start = new Date(Number(year), 0, 1);
-                const end = new Date(Number(year), 11, 31, 23, 59, 59, 999);
-                return { start: start.toISOString(), end: end.toISOString() };
-            } else {
-                const start = new Date(Number(year), Number(month)-1, 1);
-                const end = new Date(Number(year), Number(month), 0, 23, 59, 59, 999);
-                return { start: start.toISOString(), end: end.toISOString() };
-            }
-        }
-
-        async function renderTopCustomers(view, year, month) {
-            const { start, end } = computeRange(view, year, month);
-            try {
-                const res = await OrdersAPI.getTopCustomers({ limit: 5, status: 'completed', start, end });
-                let list = [];
-                const d = res.data;
-                if (Array.isArray(d)) list = d;
-                else if (Array.isArray(d?.customers)) list = d.customers;
-                else if (Array.isArray(d?.data)) list = d.data;
-                else if (Array.isArray(res.customers)) list = res.customers;
-                else if (d && typeof d === 'object') {
-                    const firstArray = Object.values(d).find(v => Array.isArray(v));
-                    list = firstArray || [];
-                }
-                const rowsHtml = list.map(item => {
-                    const user = item.user || {};
-                    const name = user.name || item.name || 'N/A';
-                    const contact = user.phone || user.email || item.email || 'N/A';
-                    const orderCount = item.orderCount || item.totalOrders || 0;
-                    const totalSpend = item.totalSpend || 0;
-                    const lastOrder = item.lastOrder ? new Date(item.lastOrder).toLocaleDateString('vi-VN') : 'N/A';
-                    return `
-                        <tr>
-                            <td>${name}</td>
-                            <td>${contact}</td>
-                            <td>${orderCount}</td>
-                            <td>${formatCurrency(totalSpend)}</td>
-                            <td>${lastOrder}</td>
-                        </tr>
-                    `;
-                }).join('');
-
-                const topCustomersHtml = `
-                    <div class="card">
-                        <div class="card-header">
-                            <h3>Top khách hàng</h3>
-                        </div>
-                        <div class="card-body">
-                            ${list.length > 0 ? `
-                                <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Khách hàng</th>
-                                            <th>Liên hệ</th>
-                                            <th>Đơn hàng</th>
-                                            <th>Chi tiêu</th>
-                                            <th>Gần nhất</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>${rowsHtml}</tbody>
-                                </table>
-                            ` : '<p class="text-muted">Chưa có dữ liệu</p>'}
-                        </div>
-                    </div>
-                `;
-
-                const topCustomersContainer = document.getElementById('topCustomersContainer');
-                if (topCustomersContainer) topCustomersContainer.innerHTML = topCustomersHtml;
-            } catch (e) {
-                const topCustomersContainer = document.getElementById('topCustomersContainer');
-                if (topCustomersContainer) topCustomersContainer.innerHTML = '<p class="text-muted">Không thể tải Top khách hàng</p>';
-            }
-        }
-
-        if (viewSelect && yearSelect && monthSelect) {
-            renderTopCustomers(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value));
-            renderTopProducts(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value));
-            viewSelect.addEventListener('change', () => {
-                renderTopCustomers(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value));
-                renderTopProducts(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value));
-            });
-            yearSelect.addEventListener('change', () => {
-                renderTopCustomers(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value));
-                renderTopProducts(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value));
-            });
-            monthSelect.addEventListener('change', () => {
-                renderTopCustomers(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value));
-                renderTopProducts(viewSelect.value, Number(yearSelect.value), Number(monthSelect.value));
-            });
-        } else {
-            renderTopCustomers('month', new Date().getFullYear(), new Date().getMonth()+1);
-            renderTopProducts('month', new Date().getFullYear(), new Date().getMonth()+1);
-        }
-
-        const kpiEl = document.getElementById('statsKPI');
-        if (kpiEl) {
-            const totalRevenue = deliveredOrders.reduce((s,o)=>s+(o.totalAmount||o.total||0),0);
-            const totalOrders = deliveredOrders.length;
-            const uniqueCustomers = new Set(deliveredOrders.map(o => o.user?._id || o.userId || o.user?.email)).size;
-            const avgOrder = totalOrders ? Math.round(totalRevenue/totalOrders) : 0;
-            kpiEl.innerHTML = `
-                <div class="stat-card stat-info">
-                    <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
-                    <div class="stat-info"><h3>${formatCurrency(totalRevenue)}</h3><p>Tổng doanh thu</p></div>
-                </div>
-                <div class="stat-card stat-success">
-                    <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
-                    <div class="stat-info"><h3>${totalOrders}</h3><p>Đơn hàng đã giao</p></div>
-                </div>
-                <div class="stat-card stat-warning">
-                    <div class="stat-icon"><i class="fas fa-users"></i></div>
-                    <div class="stat-info"><h3>${uniqueCustomers}</h3><p>Khách hàng</p></div>
-                </div>
-                <div class="stat-card stat-primary">
-                    <div class="stat-icon"><i class="fas fa-receipt"></i></div>
-                    <div class="stat-info"><h3>${formatCurrency(avgOrder)}</h3><p>Giá trị TB/đơn</p></div>
-                </div>
-            `;
-        }
+        currentPostPage = 1;
+        await loadPostTableData();
     } catch (error) {
-        console.error('Error loading statistics:', error);
-        showNotification('Không thể tải thống kê', 'error');
+        console.error('Error loading posts:', error);
+        showNotification('Không thể tải danh sách bài viết', 'error');
+    }
+}
+
+async function loadPostTableData() {
+    try {
+        const searchInput = document.getElementById('postSearch');
+        const statusFilter = document.getElementById('postStatusFilter');
+        const search = searchInput ? searchInput.value.trim() : '';
+        const status = statusFilter ? statusFilter.value : '';
+        const res = await PostsAPI.getAll({
+            keyword: search || undefined,
+            status
+        });
+        let items = [];
+        if (Array.isArray(res)) items = res;
+        else if (Array.isArray(res.data)) items = res.data;
+        else if (Array.isArray(res.posts)) items = res.posts;
+        else if (res.data && Array.isArray(res.data.posts)) items = res.data.posts;
+        allPosts = items.map(p => ({
+            _id: p._id || p.id || '',
+            title: p.title || '',
+            content: p.content || '',
+            image: p.image || p.image_url || '',
+            status: typeof p.status === 'number' ? p.status : (p.status === 'hidden' ? 0 : 1),
+            createdAt: p.created_at || p.createdAt || null
+        }));
+        renderPosts(allPosts);
+    } catch (error) {
+        console.error('Error loading posts table:', error);
+        showNotification('Không thể tải bài viết: ' + (error.message || ''), 'error');
+    }
+}
+
+function searchPosts() {
+    currentPostPage = 1;
+    loadPostTableData();
+}
+
+function filterPosts() {
+    currentPostPage = 1;
+    loadPostTableData();
+}
+
+function renderPosts(posts) {
+    const tbody = document.getElementById('postsTableBody');
+    if (!tbody) return;
+    if (!posts || posts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center">Không có bài viết nào</td></tr>';
+        renderPagination('posts', 0);
+        return;
+    }
+    const totalPages = Math.ceil(posts.length / itemsPerPage);
+    const startIndex = (currentPostPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageItems = posts.slice(startIndex, endIndex);
+    tbody.innerHTML = pageItems.map(p => {
+        const createdAt = p.createdAt ? new Date(p.createdAt).toLocaleDateString('vi-VN') : 'N/A';
+        const isActive = p.status === 1;
+        const statusText = isActive ? 'Hoạt động' : 'Đã xóa tạm';
+        const statusClass = isActive ? 'status-delivered' : 'status-cancelled';
+        const toggleLabel = isActive ? 'Xóa tạm' : 'Khôi phục';
+        const toggleIcon = isActive ? 'fa-trash' : 'fa-trash-restore';
+        return `
+            <tr>
+                <td>${p.title || 'N/A'}</td>
+                <td>${createdAt}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-btn action-btn-edit" onclick="editPost('${p._id}')">
+                            <i class="fas fa-edit"></i> Sửa
+                        </button>
+                        <button class="action-btn action-btn-warning" onclick="togglePostStatus('${p._id}')" title="${toggleLabel}">
+                            <i class="fas ${toggleIcon}"></i> ${toggleLabel}
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    renderPagination('posts', totalPages, currentPostPage);
+}
+
+function openAddPostModal() {
+    const titleEl = document.getElementById('postModalTitle');
+    const submitTextEl = document.getElementById('postSubmitText');
+    const form = document.getElementById('postForm');
+    if (!form) return;
+    if (titleEl) titleEl.textContent = 'Thêm bài viết mới';
+    if (submitTextEl) submitTextEl.textContent = 'Thêm bài viết';
+    form.reset();
+    const idEl = document.getElementById('postId');
+    if (idEl) idEl.value = '';
+    const statusEl = document.getElementById('postStatus');
+    if (statusEl) statusEl.value = '1';
+    const imageUrlEl = document.getElementById('postImageUrl');
+    if (imageUrlEl) imageUrlEl.value = '';
+    const imageLinkEl = document.getElementById('postImageLink');
+    if (imageLinkEl) imageLinkEl.value = '';
+    clearPostImagePreview();
+    openModal('postModal');
+}
+
+function clearPostImagePreview() {
+    const preview = document.getElementById('postImagePreview');
+    const img = document.getElementById('postImagePreviewImg');
+    const fileInput = document.getElementById('postImageInput');
+    const urlInput = document.getElementById('postImageUrl');
+    const linkInput = document.getElementById('postImageLink');
+    if (img) img.src = '';
+    if (preview) preview.style.display = 'none';
+    if (fileInput) fileInput.value = '';
+    if (urlInput) urlInput.value = '';
+    if (linkInput) linkInput.value = '';
+}
+
+async function editPost(id) {
+    const post = allPosts.find(p => p._id === id);
+    if (!post) return;
+    const titleEl = document.getElementById('postModalTitle');
+    const submitTextEl = document.getElementById('postSubmitText');
+    if (titleEl) titleEl.textContent = 'Sửa bài viết';
+    if (submitTextEl) submitTextEl.textContent = 'Cập nhật';
+    const idEl = document.getElementById('postId');
+    if (idEl) idEl.value = post._id;
+    const titleInput = document.getElementById('postTitle');
+    const contentInput = document.getElementById('postContent');
+    const statusEl = document.getElementById('postStatus');
+    const urlInput = document.getElementById('postImageUrl');
+    const linkInput = document.getElementById('postImageLink');
+    if (titleInput) titleInput.value = post.title || '';
+    if (contentInput) contentInput.value = post.content || '';
+    if (statusEl) statusEl.value = String(post.status === 1 ? 1 : 0);
+    if (urlInput) urlInput.value = post.image || '';
+    if (linkInput) linkInput.value = post.image || '';
+    if (post.image) {
+        const preview = document.getElementById('postImagePreview');
+        const img = document.getElementById('postImagePreviewImg');
+        if (img) img.src = post.image;
+        if (preview) preview.style.display = 'block';
+    } else {
+        clearPostImagePreview();
+    }
+    openModal('postModal');
+}
+
+async function togglePostStatus(id) {
+    const post = allPosts.find(p => p._id === id);
+    if (!post) return;
+    const nextStatus = post.status === 1 ? 0 : 1;
+    try {
+        await PostsAPI.toggleStatus(id, nextStatus);
+        post.status = nextStatus;
+        renderPosts(allPosts);
+        showNotification(
+            nextStatus === 1 ? 'Đã khôi phục bài viết' : 'Đã xóa tạm bài viết',
+            'success'
+        );
+    } catch (error) {
+        showNotification(error.message || 'Không thể cập nhật trạng thái bài viết', 'error');
     }
 }
 
@@ -1787,8 +1717,9 @@ function renderPagination(type, totalPages, currentPageNum) {
         paginationContainer.id = `${type}Pagination`;
         paginationContainer.className = 'pagination-container';
         
-        // Find the table and insert pagination after it
-        const table = document.querySelector(`#${type === 'products' ? 'products' : type === 'orders' ? 'orders' : 'users'}TableBody`)?.closest('.table-responsive')?.parentElement;
+        const table = document.querySelector(
+            `#${type === 'products' ? 'products' : type === 'orders' ? 'orders' : type === 'users' ? 'users' : 'posts'}TableBody`
+        )?.closest('.table-responsive')?.parentElement;
         if (table) {
             table.appendChild(paginationContainer);
         }
@@ -1831,6 +1762,9 @@ function changePage(type, page) {
     } else if (type === 'users') {
         currentUserPage = page;
         renderUsers(allUsers);
+    } else if (type === 'posts') {
+        currentPostPage = page;
+        renderPosts(allPosts);
     }
 }
 

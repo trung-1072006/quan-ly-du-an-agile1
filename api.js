@@ -113,7 +113,8 @@ async function apiRequest(endpoint, options = {}) {
 // ===== Auth API =====
 const AuthAPI = {
     async login(email, password) {
-        return apiRequest('/users/login', {
+        // Đăng nhập Admin qua API /api/admin/login
+        return apiRequest('/admin/login', {
             method: 'POST',
             body: JSON.stringify({ email, password })
         });
@@ -246,10 +247,45 @@ const OrdersAPI = {
     }
 };
 
+const PostsAPI = {
+    async getAll(filters = {}) {
+        const queryParams = new URLSearchParams();
+        if (filters.keyword) queryParams.append('keyword', filters.keyword);
+        if (filters.status !== undefined && filters.status !== null && filters.status !== '') {
+            queryParams.append('status', filters.status);
+        }
+        const query = queryParams.toString();
+        const basePath = filters.keyword ? '/admin/posts/search' : '/admin/posts';
+        return apiRequest(`${basePath}${query ? '?' + query : ''}`);
+    },
+
+    async create(postData) {
+        return apiRequest('/admin/posts', {
+            method: 'POST',
+            body: JSON.stringify(postData)
+        });
+    },
+
+    async update(id, postData) {
+        return apiRequest(`/admin/posts/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(postData)
+        });
+    },
+
+    async toggleStatus(id, status) {
+        return apiRequest(`/admin/posts/${id}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status })
+        });
+    }
+};
+
 // ===== Users API =====
 const UsersAPI = {
     async getAll() {
-        return apiRequest('/users/list');
+        // Lấy danh sách user từ API admin
+        return apiRequest('/admin/users');
     },
 
     async getById(id) {
@@ -257,16 +293,24 @@ const UsersAPI = {
     },
 
     async create(userData) {
-        return apiRequest('/users/create', {
+        // Tạo user mới qua API admin
+        return apiRequest('/admin/users', {
             method: 'POST',
             body: JSON.stringify(userData)
         });
     },
 
     async update(id, userData) {
-        return apiRequest(`/users/${id}`, {
+        return apiRequest(`/admin/users/${id}`, {
             method: 'PUT',
             body: JSON.stringify(userData)
+        });
+    },
+
+    async updateStatus(id, status) {
+        return apiRequest(`/admin/users/${id}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status })
         });
     },
 
@@ -337,6 +381,7 @@ window.ProductsAPI = ProductsAPI;
 window.OrdersAPI = OrdersAPI;
 window.UsersAPI = UsersAPI;
 window.CategoriesAPI = CategoriesAPI;
+window.PostsAPI = PostsAPI;
 window.getAuthToken = getAuthToken;
 window.setAuthToken = setAuthToken;
 window.removeAuthToken = removeAuthToken;

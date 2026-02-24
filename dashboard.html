@@ -18,11 +18,7 @@
         </div>
 
         <nav class="sidebar-nav">
-            <a href="#dashboard" class="nav-item active" data-page="dashboard">
-                <i class="fas fa-chart-line"></i>
-                <span>Dashboard</span>
-            </a>
-            <a href="#products" class="nav-item" data-page="products">
+            <a href="#products" class="nav-item active" data-page="products">
                 <i class="fas fa-box"></i>
                 <span>Sản phẩm</span>
             </a>
@@ -38,9 +34,9 @@
                 <i class="fas fa-tags"></i>
                 <span>Danh mục</span>
             </a>
-            <a href="#statistics" class="nav-item" data-page="statistics">
-                <i class="fas fa-chart-bar"></i>
-                <span>Thống kê</span>
+            <a href="#posts" class="nav-item" data-page="posts">
+                <i class="fas fa-newspaper"></i>
+                <span>Bài viết</span>
             </a>
         </nav>
 
@@ -60,7 +56,7 @@
                 <button class="menu-toggle" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h2 id="pageTitle">Dashboard</h2>
+                <h2 id="pageTitle">Sản phẩm</h2>
             </div>
             <div class="header-right">
                 <div class="user-info">
@@ -74,76 +70,8 @@
 
         <!-- Page Content -->
         <div class="content-wrapper">
-            <!-- Dashboard Page -->
-            <div id="dashboard" class="page active">
-                <div class="stats-grid">
-                    <div class="stat-card stat-primary">
-                        <div class="stat-icon">
-                            <i class="fas fa-box"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="totalProducts">0</h3>
-                            <p>Tổng sản phẩm</p>
-                        </div>
-                    </div>
-                    <div class="stat-card stat-success">
-                        <div class="stat-icon">
-                            <i class="fas fa-shopping-cart"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="totalOrders">0</h3>
-                            <p>Tổng đơn hàng</p>
-                        </div>
-                    </div>
-                    <div class="stat-card stat-warning">
-                        <div class="stat-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="totalUsers">0</h3>
-                            <p>Tổng người dùng</p>
-                        </div>
-                    </div>
-                    <div class="stat-card stat-info">
-                        <div class="stat-icon">
-                            <i class="fas fa-dollar-sign"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="totalRevenue">0₫</h3>
-                            <p>Tổng doanh thu</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="dashboard-grid">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3>Đơn hàng gần đây</h3>
-                            <a href="#orders" class="view-all">Xem tất cả</a>
-                        </div>
-                        <div class="card-body">
-                            <div id="recentOrders" class="table-container">
-                                <p class="text-muted">Đang tải...</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <h3>Sản phẩm bán chạy</h3>
-                            <a href="#products" class="view-all">Xem tất cả</a>
-                        </div>
-                        <div class="card-body">
-                            <div id="topProducts" class="table-container">
-                                <p class="text-muted">Đang tải...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Products Page -->
-            <div id="products" class="page">
+            <div id="products" class="page active">
                 <div class="page-header">
                     <h2>Quản lý sản phẩm</h2>
                     <button class="btn-primary" onclick="openAddProductModal()">
@@ -316,45 +244,48 @@
                 </div>
             </div>
 
-            <!-- Statistics Page -->
-            <div id="statistics" class="page">
+            <!-- Posts Page -->
+            <div id="posts" class="page">
                 <div class="page-header">
-                    <h2>Thống kê</h2>
+                    <h2>Quản lý bài viết</h2>
+                    <button class="btn-primary" onclick="openAddPostModal()">
+                        <i class="fas fa-plus"></i>
+                        Thêm bài viết
+                    </button>
                 </div>
 
-                <div class="stats-two-col">
-                    <div class="col-large">
-                        <div id="statsKPI" class="stats-grid"></div>
-                        <div class="card">
-                            <div class="card-header">
-                                <h3>Biểu đồ Doanh thu</h3>
-                                <div class="chart-controls">
-                                    <select id="chartViewSelect">
-                                        <option value="month">Theo tháng</option>
-                                        <option value="day">Theo ngày</option>
-                                        <option value="month_range">Khoảng tháng</option>
-                                        <option value="day_range">Khoảng ngày</option>
-                                    </select>
-                                    <select id="chartYearSelect"></select>
-                                    <select id="chartMonthSelect" style="display:none;"></select>
-                                    <input type="month" id="monthStartInput" style="display:none;">
-                                    <input type="month" id="monthEndInput" style="display:none;">
-                                    <input type="date" id="dayStartInput" style="display:none;">
-                                    <input type="date" id="dayEndInput" style="display:none;">
-                                    <button id="applyRangeBtn" class="btn-secondary" style="display:none;">Áp dụng</button>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div id="revenueCompare" class="compare-text"></div>
-                                <div id="revenueChart" class="chart-placeholder">
-                                    <p class="text-muted">Biểu đồ doanh thu</p>
-                                </div>
-                            </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="postSearch" placeholder="Tìm kiếm bài viết..." onkeyup="searchPosts()">
+                        </div>
+                        <div class="filter-group">
+                            <select id="postStatusFilter" onchange="filterPosts()">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="1">Hoạt động</option>
+                                <option value="0">Đã xóa tạm</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="col-medium">
-                        <div id="topCustomersContainer"></div>
-                        <div id="topProductsContainer"></div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tiêu đề</th>
+                                        <th>Ngày đăng</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="postsTableBody">
+                                    <tr>
+                                        <td colspan="4" class="text-center">Đang tải...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -412,21 +343,6 @@
                         <button type="button" class="btn-secondary" onclick="clearImagePreview()" style="margin-left: 10px;">Xóa ảnh</button>
                     </div>
                     <small>Chỉ chấp nhận file ảnh (JPG, PNG, GIF, WebP)</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="productRating">Đánh giá (0-5)</label>
-                    <input type="number" id="productRating" min="0" max="5" step="0.1" value="4.5">
-                </div>
-
-                <div class="form-group">
-                    <label for="productSold">Đã bán</label>
-                    <input type="number" id="productSold" min="0" value="0">
-                </div>
-
-                <div class="form-group">
-                    <label for="productDiscount">Giảm giá (%)</label>
-                    <input type="number" id="productDiscount" min="0" max="100" value="0">
                 </div>
 
                 <div class="modal-footer">
@@ -519,6 +435,54 @@
         </div>
     </div>
 
+    <!-- Add/Edit Post Modal -->
+    <div id="postModal" class="modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="postModalTitle">Thêm bài viết mới</h3>
+                <button class="modal-close" onclick="closeModal('postModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="postForm" class="modal-body">
+                <input type="hidden" id="postId">
+                <div class="form-group">
+                    <label for="postTitle">Tiêu đề bài viết *</label>
+                    <input type="text" id="postTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="postContent">Nội dung bài viết *</label>
+                    <textarea id="postContent" rows="6" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="postImage">Ảnh bài viết</label>
+                    <input type="file" id="postImageInput" accept="image/*">
+                    <input type="url" id="postImageLink" placeholder="Hoặc nhập link ảnh (https://...)">
+                    <input type="hidden" id="postImageUrl">
+                    <div id="postImagePreview" class="image-preview" style="display:none;">
+                        <img id="postImagePreviewImg" alt="Xem trước ảnh bài viết">
+                        <button type="button" class="btn-secondary" onclick="clearPostImagePreview()">Xóa ảnh</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="postStatus">Trạng thái</label>
+                    <select id="postStatus">
+                        <option value="1">Hiển thị</option>
+                        <option value="0">Ẩn</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeModal('postModal')">
+                        Hủy
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <span id="postSubmitText">Thêm bài viết</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Order Detail Modal -->
     <div id="orderDetailModal" class="modal">
         <div class="modal-content modal-lg">
@@ -561,4 +525,3 @@
     <script src="app.js"></script>
 </body>
 </html>
-

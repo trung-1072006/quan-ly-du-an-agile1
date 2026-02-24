@@ -25,18 +25,15 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const response = await AuthAPI.login(email, password);
             
-            // Check if user is admin
-            const user = response.data?.user || response.data;
+            // Chuẩn hóa dữ liệu trả về để hỗ trợ cả /users/login và /admin/login
+            const token = response.token || response.data?.token;
+            const user = response.user || response.data?.user || response.data;
+
             if (user && user.role === 'admin') {
-                // Store token
-                if (response.data?.token) {
-                    setAuthToken(response.data.token);
+                if (token) {
+                    setAuthToken(token);
                 }
-                
-                // Store user info
                 localStorage.setItem('admin_user', JSON.stringify(user));
-                
-                // Redirect to dashboard
                 window.location.href = 'dashboard.html';
             } else {
                 throw new Error('Bạn không có quyền truy cập. Chỉ admin mới được đăng nhập.');
