@@ -22,10 +22,6 @@
                 <i class="fas fa-box"></i>
                 <span>Sản phẩm</span>
             </a>
-            <a href="#orders" class="nav-item" data-page="orders">
-                <i class="fas fa-shopping-cart"></i>
-                <span>Đơn hàng</span>
-            </a>
             <a href="#users" class="nav-item" data-page="users">
                 <i class="fas fa-users"></i>
                 <span>Người dùng</span>
@@ -118,47 +114,7 @@
                 </div>
             </div>
 
-            <!-- Orders Page -->
-            <div id="orders" class="page">
-                <div class="page-header">
-                    <h2>Quản lý đơn hàng</h2>
-                    <div class="filter-group">
-                        <select id="orderStatusFilter" onchange="filterOrders()">
-                            <option value="">Tất cả trạng thái</option>
-                            <option value="pending">Chờ xác nhận</option>
-                            <option value="confirmed">Đã xác nhận</option>
-                            <option value="shipping">Đang giao</option>
-                            <option value="delivered">Đã giao</option>
-                            <option value="cancelled">Đã hủy</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Mã đơn</th>
-                                        <th>Khách hàng</th>
-                                        <th>Sản phẩm</th>
-                                        <th>Tổng tiền</th>
-                                        <th>Trạng thái</th>
-                                        <th>Ngày đặt</th>
-                                        <th>Thao tác</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="ordersTableBody">
-                                    <tr>
-                                        <td colspan="7" class="text-center">Đang tải...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+           
 
             <!-- Users Page -->
             <div id="users" class="page">
@@ -172,6 +128,10 @@
 
                 <div class="card">
                     <div class="card-header">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="userSearch" placeholder="Tìm kiếm người dùng..." onkeyup="searchUsers()">
+                        </div>
                         <div class="filter-group">
                             <select id="userViewFilter" onchange="toggleUserView()">
                                 <option value="active">Tài khoản hiện tại</option>
@@ -215,6 +175,10 @@
 
                 <div class="card">
                     <div class="card-header">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="categorySearch" placeholder="Tìm kiếm danh mục..." onkeyup="searchCategories()">
+                        </div>
                         <div class="filter-group">
                             <select id="categoryViewFilter" onchange="toggleCategoryView()">
                                 <option value="active">Danh mục hiện tại</option>
@@ -434,6 +398,20 @@
             </form>
         </div>
     </div>
+    <!-- User Detail Modal -->
+    <div id="userDetailModal" class="modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>Chi tiết người dùng</h3>
+                <button class="modal-close" onclick="closeModal('userDetailModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="userDetailContent">
+                <p class="text-muted">Đang tải...</p>
+            </div>
+        </div>
+    </div>
 
     <!-- Add/Edit Post Modal -->
     <div id="postModal" class="modal">
@@ -483,16 +461,48 @@
         </div>
     </div>
 
-    <!-- Order Detail Modal -->
-    <div id="orderDetailModal" class="modal">
+    
+
+    <!-- Product Detail Modal -->
+    <div id="productDetailModal" class="modal">
         <div class="modal-content modal-lg">
             <div class="modal-header">
-                <h3>Chi tiết đơn hàng</h3>
-                <button class="modal-close" onclick="closeModal('orderDetailModal')">
+                <h3>Chi tiết sản phẩm</h3>
+                <button class="modal-close" onclick="closeModal('productDetailModal')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body" id="orderDetailContent">
+            <div class="modal-body" id="productDetailContent">
+                <p class="text-muted">Đang tải...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Detail Modal -->
+    <div id="postDetailModal" class="modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>Chi tiết bài viết</h3>
+                <button class="modal-close" onclick="closeModal('postDetailModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="postDetailContent">
+                <p class="text-muted">Đang tải...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Detail Modal -->
+    <div id="categoryDetailModal" class="modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>Chi tiết danh mục</h3>
+                <button class="modal-close" onclick="closeModal('categoryDetailModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="categoryDetailContent">
                 <p class="text-muted">Đang tải...</p>
             </div>
         </div>

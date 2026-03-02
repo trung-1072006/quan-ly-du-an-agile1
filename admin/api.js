@@ -259,6 +259,10 @@ const PostsAPI = {
         return apiRequest(`${basePath}${query ? '?' + query : ''}`);
     },
 
+    async getPublicById(id) {
+        return apiRequest(`/posts/${id}`);
+    },
+
     async create(postData) {
         return apiRequest('/admin/posts', {
             method: 'POST',
@@ -279,6 +283,12 @@ const PostsAPI = {
             body: JSON.stringify({ status })
         });
     }
+    ,
+    async forceDelete(id) {
+        return apiRequest(`/admin/posts/${id}`, {
+            method: 'DELETE'
+        });
+    }
 };
 
 // ===== Users API =====
@@ -288,8 +298,23 @@ const UsersAPI = {
         return apiRequest('/admin/users');
     },
 
+    async getAdminById(id) {
+        return apiRequest(`/admin/users/${id}`);
+    },
+
     async getById(id) {
         return apiRequest(`/users/${id}`);
+    },
+
+    async search({ keyword, role, status } = {}) {
+        const queryParams = new URLSearchParams();
+        if (keyword) queryParams.append('keyword', keyword);
+        if (role) queryParams.append('role', role);
+        if (status !== undefined && status !== null && status !== '') {
+            queryParams.append('status', status);
+        }
+        const query = queryParams.toString();
+        return apiRequest(`/admin/users/search${query ? '?' + query : ''}`);
     },
 
     async create(userData) {
@@ -325,6 +350,16 @@ const UsersAPI = {
 const CategoriesAPI = {
     async getAll() {
         return apiRequest('/categories');
+    },
+
+    async search({ keyword, status } = {}) {
+        const queryParams = new URLSearchParams();
+        if (keyword) queryParams.append('keyword', keyword);
+        if (status !== undefined && status !== null && status !== '') {
+            queryParams.append('status', status);
+        }
+        const query = queryParams.toString();
+        return apiRequest(`/admin/categories/search${query ? '?' + query : ''}`);
     },
 
     async getById(id) {

@@ -890,36 +890,55 @@ select:focus {
 
 /* ===== Status Badges ===== */
 .status-badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 600;
+    border: 1px solid transparent;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.status-badge::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.04);
 }
 
 .status-pending {
-    background: #FFF3CD;
-    color: #856404;
+    background: rgba(255, 193, 7, 0.15);
+    color: #B26A00;
+    border-color: rgba(255, 193, 7, 0.35);
 }
 
 .status-confirmed {
-    background: #D1ECF1;
-    color: #0C5460;
+    background: rgba(33, 150, 243, 0.15);
+    color: #1565C0;
+    border-color: rgba(33, 150, 243, 0.35);
 }
 
 .status-shipping {
-    background: #D4EDDA;
-    color: #155724;
+    background: rgba(0, 200, 83, 0.15);
+    color: #007E33;
+    border-color: rgba(0, 200, 83, 0.35);
 }
 
 .status-delivered {
-    background: #D1ECF1;
-    color: #0C5460;
+    background: rgba(0, 150, 136, 0.15);
+    color: #00796B;
+    border-color: rgba(0, 150, 136, 0.35);
 }
 
 .status-cancelled {
-    background: #F8D7DA;
-    color: #721C24;
+    background: rgba(244, 67, 54, 0.15);
+    color: #C62828;
+    border-color: rgba(244, 67, 54, 0.35);
 }
 
 /* ===== Action Buttons ===== */
@@ -943,6 +962,15 @@ select:focus {
 }
 
 .action-btn-edit:hover {
+    background: #BBDEFB;
+}
+
+.action-btn-view {
+    background: #E3F2FD;
+    color: var(--info-color);
+}
+
+.action-btn-view:hover {
     background: #BBDEFB;
 }
 
@@ -1364,4 +1392,3 @@ select:focus {
     color: var(--text-secondary);
     font-size: 14px;
 }
-

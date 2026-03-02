@@ -433,6 +433,9 @@ function renderProducts(products) {
         let actionButtons = '';
         if (currentProductView === 'active') {
             actionButtons = `
+                <button class="action-btn action-btn-view" onclick="viewProduct('${product._id}')">
+                    <i class="fas fa-eye"></i> Xem
+                </button>
                 <button class="action-btn action-btn-edit" onclick="editProduct('${product._id}')">
                     <i class="fas fa-edit"></i> Sửa
                 </button>
@@ -442,6 +445,9 @@ function renderProducts(products) {
             `;
         } else {
             actionButtons = `
+                <button class="action-btn action-btn-view" onclick="viewProduct('${product._id}')">
+                    <i class="fas fa-eye"></i> Xem
+                </button>
                 <button class="action-btn action-btn-edit" onclick="restoreProduct('${product._id}')">
                     <i class="fas fa-undo"></i> Khôi phục
                 </button>
@@ -560,6 +566,46 @@ async function editProduct(id) {
         openModal('productModal');
     } catch (error) {
         showNotification('Không thể tải thông tin sản phẩm', 'error');
+    }
+}
+
+async function viewProduct(id) {
+    try {
+        let product = allProducts.find(p => p._id === id);
+        if (!product) {
+            const res = await ProductsAPI.getById(id);
+            product = res && res.data ? res.data : res;
+        }
+        if (!product) {
+            showNotification('Không tìm thấy sản phẩm', 'error');
+            return;
+        }
+        const categoryName =
+            product.category?.name ||
+            product.category_name ||
+            (typeof product.category === 'string' ? product.category : '') ||
+            (typeof product.category_id === 'string' ? product.category_id : '') ||
+            'N/A';
+        const imgSrc = product.image || 'https://via.placeholder.com/120';
+        const content = `
+            <div class="product-detail">
+                <div style="display:flex; gap:16px; align-items:flex-start;">
+                    <img src="${imgSrc}" alt="${product.name || 'Ảnh sản phẩm'}" style="width:120px; height:120px; object-fit:cover; border-radius:8px;" onerror="this.src='https://via.placeholder.com/120'">
+                    <div style="flex:1">
+                        <h3 style="margin:0 0 8px 0; color: var(--text-primary)">${product.name || 'N/A'}</h3>
+                        <p style="margin:4px 0; color: var(--text-secondary)">Danh mục: <strong>${categoryName}</strong></p>
+                        <p style="margin:4px 0; color: var(--text-secondary)">Giá: <strong>${formatCurrency(product.price || 0)}</strong></p>
+                        ${product.stock !== undefined ? `<p style="margin:4px 0; color: var(--text-secondary)">Tồn kho: <strong>${product.stock}</strong></p>` : ''}
+                    </div>
+                </div>
+                ${product.description ? `<div style="margin-top:12px;"><h4 style="margin:0 0 8px 0; font-size:16px;">Mô tả</h4><p style="color: var(--text-secondary)">${product.description}</p></div>` : ''}
+            </div>
+        `;
+        const container = document.getElementById('productDetailContent');
+        if (container) container.innerHTML = content;
+        openModal('productDetailModal');
+    } catch (error) {
+        showNotification('Lỗi tải chi tiết sản phẩm: ' + error.message, 'error');
     }
 }
 
@@ -976,7 +1022,12 @@ function toggleUserView() {
     if (viewSelect) {
         currentUserView = viewSelect.value;
         currentUserPage = 1;
-        filterAndRenderUsers();
+        const term = document.getElementById('userSearch')?.value.trim();
+        if (term) {
+            searchUsers(); // re-run search under new view
+        } else {
+            filterAndRenderUsers();
+        }
     }
 }
 
@@ -988,6 +1039,41 @@ function filterAndRenderUsers() {
         filtered = allUsers.filter(u => u.isDeleted);
     }
     renderUsers(filtered);
+}
+
+async function searchUsers() {
+    try {
+        const input = document.getElementById('userSearch');
+        const keyword = input ? input.value.trim() : '';
+        currentUserPage = 1;
+        if (!keyword) {
+            await loadUsers();
+            return;
+        }
+        const res = await UsersAPI.search({ keyword });
+        const dataArr = Array.isArray(res) ? res : (res.data || []);
+        const mapped = dataArr.map(u => {
+            const rawStatus = u.status ?? (u.isLocked ? 0 : 1);
+            const numericStatus = typeof rawStatus === 'string'
+                ? (rawStatus === 'locked' ? 0 : 1)
+                : (rawStatus ? 1 : 0);
+            const isLocked = numericStatus === 0;
+            return {
+                _id: u._id || u.id || u.user_id || '',
+                name: u.name || u.full_name || u.username || u.email || 'N/A',
+                email: u.email || '',
+                role: u.role || 'user',
+                status: numericStatus,
+                isLocked,
+                isDeleted: u.isDeleted || u.deleted || false,
+                createdAt: u.createdAt || u.created_at || null
+            };
+        });
+        allUsers = mapped;
+        filterAndRenderUsers();
+    } catch (error) {
+        showNotification('Không thể tìm kiếm người dùng: ' + (error.message || ''), 'error');
+    }
 }
 
 function renderUsers(users) {
@@ -1040,7 +1126,10 @@ function renderUsers(users) {
         if (currentUserView === 'active') {
             const lockIcon = user.isLocked ? 'fa-unlock' : 'fa-lock';
             const lockText = user.isLocked ? 'Mở khóa' : 'Khóa';
-            const editBtn = `
+            const baseBtns = `
+                <button class="action-btn action-btn-view" onclick="viewUser('${user._id}')">
+                    <i class="fas fa-eye"></i> Xem
+                </button>
                 <button class="action-btn action-btn-edit" onclick="editUser('${user._id}')">
                     <i class="fas fa-edit"></i> Sửa
                 </button>
@@ -1056,16 +1145,19 @@ function renderUsers(users) {
 
             if (isSelf) {
                 // Không được tự khóa/xóa chính mình
-                actionButtons = editBtn;
+                actionButtons = baseBtns;
             } else if (isAdminUser && !currentIsSuperAdmin) {
                 // Admin thường: không được khóa/xóa admin khác
-                actionButtons = editBtn;
+                actionButtons = baseBtns;
             } else {
                 // Super admin khóa/xóa admin khác, hoặc admin với user thường
-                actionButtons = editBtn + manageBtns;
+                actionButtons = baseBtns + manageBtns;
             }
         } else {
             actionButtons = `
+                <button class="action-btn action-btn-view" onclick="viewUser('${user._id}')">
+                    <i class="fas fa-eye"></i> Xem
+                </button>
                 <button class="action-btn action-btn-edit" onclick="restoreUser('${user._id}')">
                     <i class="fas fa-undo"></i> Khôi phục
                 </button>
@@ -1150,6 +1242,34 @@ async function permanentDeleteUser(id) {
     }
 }
 
+async function viewUser(id) {
+    try {
+        const res = await UsersAPI.getAdminById(id);
+        const user = res?.data || res;
+        if (!user || !user._id) {
+            showNotification('Không tìm thấy người dùng', 'error');
+            return;
+        }
+        const createdAt = user.createdAt ? new Date(user.createdAt).toLocaleString('vi-VN') : 'N/A';
+        const statusText = user.isLocked ? 'Đã khóa' : 'Hoạt động';
+        const roleText = (user.role || 'user').toLowerCase() === 'admin' ? 'Admin' : 'User';
+        const content = `
+            <div class="user-detail">
+                <h3 style="margin:0 0 8px 0; color: var(--text-primary)">${user.name || 'N/A'}</h3>
+                <p style="margin:4px 0; color: var(--text-secondary)">Email: <strong>${user.email || 'N/A'}</strong></p>
+                <p style="margin:4px 0; color: var(--text-secondary)">Vai trò: <strong>${roleText}</strong></p>
+                <p style="margin:4px 0; color: var(--text-secondary)">Trạng thái: <strong>${statusText}</strong></p>
+                <p style="margin:4px 0; color: var(--text-secondary)">Ngày tạo: <strong>${createdAt}</strong></p>
+            </div>
+        `;
+        const container = document.getElementById('userDetailContent');
+        if (container) container.innerHTML = content;
+        openModal('userDetailModal');
+    } catch (error) {
+        showNotification(error.message || 'Không thể tải chi tiết người dùng', 'error');
+    }
+}
+
 async function toggleLockUser(id) {
     const index = allUsers.findIndex(u => u._id === id);
     if (index !== -1) {
@@ -1213,7 +1333,12 @@ async function toggleCategoryView() {
     const viewSelect = document.getElementById('categoryViewFilter');
     if (viewSelect) {
         currentCategoryView = viewSelect.value;
-        await loadCategoryTableData();
+        const term = document.getElementById('categorySearch')?.value.trim();
+        if (term) {
+            await searchCategories();
+        } else {
+            await loadCategoryTableData();
+        }
     }
 }
 
@@ -1234,6 +1359,32 @@ async function loadCategoryTableData() {
 }
 
 // Removed filterAndRenderCategories as it is replaced by loadCategoryTableData
+async function searchCategories() {
+    try {
+        const input = document.getElementById('categorySearch');
+        const keyword = input ? input.value.trim() : '';
+        if (!keyword) {
+            await loadCategoryTableData();
+            return;
+        }
+        if (currentCategoryView === 'active') {
+            const res = await CategoriesAPI.search({ keyword, status: 1 });
+            const items = Array.isArray(res) ? res : (res.data || []);
+            renderCategories(items);
+        } else {
+            const res = await CategoriesAPI.getTrash();
+            const items = Array.isArray(res) ? res : (res.data || []);
+            const term = keyword.toLowerCase();
+            const filtered = items.filter(c =>
+                (c.name || '').toLowerCase().includes(term) ||
+                (c.slug || '').toLowerCase().includes(term)
+            );
+            renderCategories(filtered);
+        }
+    } catch (error) {
+        showNotification('Không thể tìm kiếm danh mục: ' + (error.message || ''), 'error');
+    }
+}
 
 function renderCategories(categories) {
     const tbody = document.getElementById('categoriesTableBody');
@@ -1251,6 +1402,9 @@ function renderCategories(categories) {
         let actionButtons = '';
         if (currentCategoryView === 'active') {
             actionButtons = `
+                <button class="action-btn action-btn-view" onclick="viewCategory('${category._id}')">
+                    <i class="fas fa-eye"></i> Xem
+                </button>
                 <button class="action-btn action-btn-edit" onclick="editCategory('${category._id}')">
                     <i class="fas fa-edit"></i> Sửa
                 </button>
@@ -1260,6 +1414,9 @@ function renderCategories(categories) {
             `;
         } else {
             actionButtons = `
+                <button class="action-btn action-btn-view" onclick="viewCategory('${category._id}')">
+                    <i class="fas fa-eye"></i> Xem
+                </button>
                 <button class="action-btn action-btn-edit" onclick="restoreCategory('${category._id}')">
                     <i class="fas fa-undo"></i> Khôi phục
                 </button>
@@ -1319,6 +1476,41 @@ async function editCategory(id) {
         openModal('categoryModal');
     } catch (error) {
         showNotification('Lỗi khi tải thông tin danh mục: ' + error.message, 'error');
+    }
+}
+
+async function viewCategory(id) {
+    try {
+        const res = await CategoriesAPI.getById(id);
+        const category = res?.data || res;
+        if (!category || !category._id) {
+            showNotification('Không tìm thấy danh mục', 'error');
+            return;
+        }
+        const createdAt = (category.createdAt || category.created_at) ? new Date(category.createdAt || category.created_at).toLocaleString('vi-VN') : 'N/A';
+        const updatedAt = (category.updatedAt || category.updated_at) ? new Date(category.updatedAt || category.updated_at).toLocaleString('vi-VN') : 'N/A';
+        const imgSrc = category.image || 'https://via.placeholder.com/120';
+        const statusText = (category.status === 1 || category.status === 'active') ? 'Hoạt động' : 'Đã xóa tạm';
+        const content = `
+            <div class="category-detail">
+                <div style="display:flex; gap:16px; align-items:flex-start;">
+                    <img src="${imgSrc}" alt="${category.name || 'Ảnh danh mục'}" style="width:120px; height:120px; object-fit:cover; border-radius:8px;" onerror="this.src='https://via.placeholder.com/120'">
+                    <div style="flex:1">
+                        <h3 style="margin:0 0 8px 0; color: var(--text-primary)">${category.name || 'N/A'}</h3>
+                        ${category.slug ? `<p style="margin:4px 0; color: var(--text-secondary)">Slug: <strong>${category.slug}</strong></p>` : ''}
+                        <p style="margin:4px 0; color: var(--text-secondary)">Trạng thái: <strong>${statusText}</strong></p>
+                        <p style="margin:4px 0; color: var(--text-secondary)">Ngày tạo: <strong>${createdAt}</strong></p>
+                        <p style="margin:4px 0; color: var(--text-secondary)">Cập nhật: <strong>${updatedAt}</strong></p>
+                    </div>
+                </div>
+                ${category.description ? `<div style="margin-top:12px;"><h4 style="margin:0 0 8px 0; font-size:16px;">Mô tả</h4><p style="color: var(--text-secondary)">${category.description}</p></div>` : ''}
+            </div>
+        `;
+        const container = document.getElementById('categoryDetailContent');
+        if (container) container.innerHTML = content;
+        openModal('categoryDetailModal');
+    } catch (error) {
+        showNotification('Lỗi tải chi tiết danh mục: ' + (error.message || ''), 'error');
     }
 }
 
@@ -1533,6 +1725,9 @@ function filterPosts() {
 function renderPosts(posts) {
     const tbody = document.getElementById('postsTableBody');
     if (!tbody) return;
+    const statusFilterEl = document.getElementById('postStatusFilter');
+    const selectedStatus = statusFilterEl ? statusFilterEl.value : '';
+    const showPermanentDelete = selectedStatus === '0';
     if (!posts || posts.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" class="text-center">Không có bài viết nào</td></tr>';
         renderPagination('posts', 0);
@@ -1556,12 +1751,19 @@ function renderPosts(posts) {
                 <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                 <td>
                     <div class="action-buttons">
+                        <button class="action-btn action-btn-view" onclick="viewPost('${p._id}')">
+                            <i class="fas fa-eye"></i> Xem
+                        </button>
                         <button class="action-btn action-btn-edit" onclick="editPost('${p._id}')">
                             <i class="fas fa-edit"></i> Sửa
                         </button>
                         <button class="action-btn action-btn-warning" onclick="togglePostStatus('${p._id}')" title="${toggleLabel}">
                             <i class="fas ${toggleIcon}"></i> ${toggleLabel}
                         </button>
+                        ${(!isActive && showPermanentDelete) ? `
+                        <button class="action-btn action-btn-delete" onclick="permanentDeletePost('${p._id}')">
+                            <i class="fas fa-times"></i> Xóa vĩnh viễn
+                        </button>` : ''}
                     </div>
                 </td>
             </tr>
@@ -1647,6 +1849,49 @@ async function togglePostStatus(id) {
         );
     } catch (error) {
         showNotification(error.message || 'Không thể cập nhật trạng thái bài viết', 'error');
+    }
+}
+
+async function viewPost(id) {
+    try {
+        const res = await PostsAPI.getPublicById(id);
+        const data = res?.data || res;
+        const post = data?.post || data;
+        if (!post) {
+            showNotification('Không tìm thấy bài viết', 'error');
+            return;
+        }
+        const createdAt = post.createdAt ? new Date(post.createdAt).toLocaleString('vi-VN') : 'N/A';
+        const imgSrc = post.image || post.image_url || 'https://via.placeholder.com/160';
+        const content = `
+            <div class="post-detail">
+                <div style="display:flex; gap:16px; align-items:flex-start;">
+                    <img src="${imgSrc}" alt="${post.title || 'Ảnh bài viết'}" style="width:160px; height:120px; object-fit:cover; border-radius:8px;" onerror="this.src='https://via.placeholder.com/160'">
+                    <div style="flex:1">
+                        <h3 style="margin:0 0 8px 0; color: var(--text-primary)">${post.title || 'N/A'}</h3>
+                        <p style="margin:4px 0; color: var(--text-secondary)">Ngày đăng: <strong>${createdAt}</strong></p>
+                    </div>
+                </div>
+                ${post.content ? `<div style="margin-top:12px;"><h4 style="margin:0 0 8px 0; font-size:16px;">Nội dung</h4><p style="color: var(--text-secondary)">${post.content}</p></div>` : ''}
+            </div>
+        `;
+        const container = document.getElementById('postDetailContent');
+        if (container) container.innerHTML = content;
+        openModal('postDetailModal');
+    } catch (error) {
+        showNotification(error.message || 'Không thể tải chi tiết bài viết', 'error');
+    }
+}
+
+async function permanentDeletePost(id) {
+    if (!confirm('Hành động này không thể hoàn tác. Bạn chắc chắn muốn xóa vĩnh viễn bài viết?')) return;
+    try {
+        await PostsAPI.forceDelete(id);
+        allPosts = allPosts.filter(p => p._id !== id);
+        renderPosts(allPosts);
+        showNotification('Đã xóa vĩnh viễn bài viết', 'success');
+    } catch (error) {
+        showNotification(error.message || 'Không thể xóa vĩnh viễn bài viết', 'error');
     }
 }
 
